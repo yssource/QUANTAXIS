@@ -12,7 +12,7 @@ from sqlalchemy.orm import (
     Query,
 )
 from toolz import first
-from .schema import (
+from schema import (
     full,
     fundamental,
     Base
@@ -52,24 +52,12 @@ def query(*args):
     engine = create_engine("sqlite:///fundamental.sqlite")
     Session = sessionmaker(bind=engine)
     session = Session()
-    # args = [fundamental.code, fundamental.report_date, fundamental.roe,
-    #         func.max(fundamental.report_date).label('report_date')]
-    # args = [fundamental.code, fundamental.report_date, fundamental.roe,
-    #         func.max(fundamental.report_date).label('report_date')]
-    # return Query(args).with_session(session).filter(
-    #     fundamental.report_date < pd.to_datetime('2013-07-18')
-    # ).group_by(fundamental.code)
+    args = [fundamental.code, fundamental.report_date, fundamental.roe,
+            func.max(fundamental.report_date).label('report_date')]
+    return Query(args).with_session(session).filter(
+        fundamental.report_date < pd.to_datetime('2013-07-18')
+    ).group_by(fundamental.code)
 
-    tt = [fundamental.code, func.max(fundamental.report_date).label('report_date')]
-    args = list(args)
-    import pudb; pudb.set_trace()
-    q = Query(args).\
-        filter(fundamental.report_date > pd.to_datetime('2013-01-18')).\
-        add_columns(fundamental.code, func.max(fundamental.report_date).label('report_date')).\
-        with_session(session).\
-        filter(fundamental.report_date < pd.to_datetime('2013-07-18'))
-
-    return q
 
 def query1(*args):
     engine = create_engine("sqlite:///fundamental.sqlite")
@@ -82,16 +70,11 @@ def query1(*args):
 
 
 def sql_query():
-    # data = query(fundamental.code, fundamental.report_date, fundamental.roe,
-    #              fundamental.quarter).filter(
-    #     fundamental.roe > 10
-    # ).all()
-
-    data = query(fundamental.roe, fundamental.quarter).filter(
+    data = query(fundamental.code, fundamental.report_date, fundamental.roe,
+                 fundamental.quarter).filter(
         fundamental.roe > 10
     ).all()
 
-    print('d0 {}'.format(data))
     df = pd.DataFrame(data)
 
     print(df)
@@ -99,12 +82,10 @@ def sql_query():
     data = query1().filter(
         full.roe > 10
     ).all()
-    print('d1 {}'.format(data))
 
     df = pd.DataFrame(data)
 
     print(df)
-    return df
 
 
 class FundamentalReader(object):
@@ -114,14 +95,10 @@ class FundamentalReader(object):
         self.session = sessionmaker(bind=self.engine)()
 
     def query(self, dt, *args, **kwargs):
-        # args = list(args) + [fundamental.code, func.max(fundamental.report_date).label('report_date')]
-        tt = [fundamental.code, func.max(fundamental.report_date).label('report_date')]
-        args = list(args)
-        q = Query(args).filter(fundamental.report_date < dt).add_columns(fundamental.code, func.max(fundamental.report_date).label('report_date'))
-        return q
-        # return Query(args).with_session(self.session).filter(
-        #     fundamental.report_date < dt
-        # )
+        args = list(args) + [fundamental.code, func.max(fundamental.report_date).label('report_date')]
+        return Query(args).with_session(self.session).filter(
+            fundamental.report_date < dt
+        )
 
     def get_fundamental(self, query):
         return pd.DataFrame(query.group_by(fundamental.code).all())
