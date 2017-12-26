@@ -12,7 +12,7 @@ from sqlalchemy.orm import (
     Query,
 )
 from toolz import first
-from schema import (
+from .schema import (
     full,
     fundamental,
     Base
