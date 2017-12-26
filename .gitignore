@@ -149,3 +149,4 @@ kernel*.json
 .\vs
 
 *.sqlite
+*.py

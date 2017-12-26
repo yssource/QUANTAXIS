@@ -69,7 +69,6 @@ def QA_save_tdx_to_mongo(file_dir, client=QA_Setting.client):
                             print('inser {}'.format(e))
 
 
-
 if __name__ == '__main__':
     # file_dir = ['C:\\users\\yutiansut\\desktop\\sh5fz',
     #             'C:\\users\\yutiansut\\desktop\\sz5fz']
