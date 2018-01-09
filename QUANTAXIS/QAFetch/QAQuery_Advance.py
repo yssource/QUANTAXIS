@@ -116,7 +116,7 @@ def QA_fetch_stock_min_adv(
                 "$gte": QA_util_time_stamp(start),
                 "$lte": QA_util_time_stamp(end)
             }, 'type': type_
-        }):
+        }).sort('time_stamp', 1):
 
             __data.append([str(item['code']), float(item['open']), float(item['high']), float(
                 item['low']), float(item['close']), float(item['vol']), item['datetime'], item['time_stamp'], item['date']])
