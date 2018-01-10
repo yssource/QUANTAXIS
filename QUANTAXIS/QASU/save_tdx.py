@@ -98,7 +98,7 @@ def QA_SU_save_stock_xdxr(client=QA_Setting.client):
     stock_list = QA_fetch_get_stock_time_to_market()
     coll = client.quantaxis.stock_xdxr
     coll.create_index([('code', pymongo.ASCENDING),
-                         ('date', pymongo.ASCENDING)])
+                         ('date', pymongo.ASCENDING)], unique=True)
     err = []
 
     def __saving_work(code, coll):
@@ -106,7 +106,7 @@ def QA_SU_save_stock_xdxr(client=QA_Setting.client):
         try:
             coll.insert_many(
                 QA_util_to_json_from_pandas(
-                    QA_fetch_get_stock_xdxr(str(code))))
+                    QA_fetch_get_stock_xdxr(str(code))), ordered=False)
 
         except:
 
