@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016-2017 yutiansut/QUANTAXIS
+# Copyright (c) 2016-2018 yutiansut/QUANTAXIS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -68,14 +68,21 @@ def QA_SU_save_stock_day(client=QA_Setting.client):
                     # 加入这个判断的原因是因为如果股票是刚上市的 数据库会没有数据 所以会有负索引问题出现
 
                 start_date = ref[ref.count() - 1]['date']
+
+                QA_util_log_info(' UPDATE_STOCK_DAY \n Trying updating %s from %s to %s' %
+                                (code, start_date, end_date))
+                if start_date != end_date:
+                    coll_stock_day.insert_many(
+                        QA_util_to_json_from_pandas(
+                            QA_fetch_get_stock_day(str(code), start_date, end_date, '00')[1::]))
             else:
                 start_date = '1990-01-01'
-            QA_util_log_info(' UPDATE_STOCK_DAY \n Trying updating %s from %s to %s' %
-                             (code, start_date, end_date))
-            if start_date != end_date:
-                coll_stock_day.insert_many(
-                    QA_util_to_json_from_pandas(
-                        QA_fetch_get_stock_day(str(code), start_date, end_date, '00')[1::]))
+                QA_util_log_info(' UPDATE_STOCK_DAY \n Trying updating %s from %s to %s' %
+                                (code, start_date, end_date))
+                if start_date != end_date:
+                    coll_stock_day.insert_many(
+                        QA_util_to_json_from_pandas(
+                            QA_fetch_get_stock_day(str(code), start_date, end_date, '00')))
         except:
             err.append(str(code))
     for item in range(len(stock_list)):
@@ -152,17 +159,26 @@ def QA_SU_save_stock_min(client=QA_Setting.client):
                 end_time = str(now_time())[0:19]
                 if ref_.count() > 0:
                     start_time = ref_[ref_.count() - 1]['datetime']
+
+                    QA_util_log_info(
+                        '##JOB03.%s Now Saving %s from %s to %s ==%s ' % (['1min', '5min', '15min', '30min', '60min'].index(type), str(code), start_time, end_time, type))
+                    if start_time != end_time:
+                        __data = QA_fetch_get_stock_min(
+                            str(code), start_time, end_time, type)
+                        if len(__data) > 1:
+                            coll.insert_many(
+                                QA_util_to_json_from_pandas(__data[1::]))
                 else:
                     start_time = '2015-01-01'
-                QA_util_log_info(
-                    '##JOB03.%s Now Saving %s from %s to %s ==%s ' % (['1min', '5min', '15min', '30min', '60min'].index(type), str(code), start_time, end_time, type))
-                if start_time != end_time:
-                    __data = QA_fetch_get_stock_min(
-                        str(code), start_time, end_time, type)
-                    if len(__data) > 1:
-                        coll.insert_many(
-                            QA_util_to_json_from_pandas(__data[1::]))
 
+                    QA_util_log_info(
+                        '##JOB03.%s Now Saving %s from %s to %s ==%s ' % (['1min', '5min', '15min', '30min', '60min'].index(type), str(code), start_time, end_time, type))
+                    if start_time != end_time:
+                        __data = QA_fetch_get_stock_min(
+                            str(code), start_time, end_time, type)
+                        if len(__data) > 1:
+                            coll.insert_many(
+                                QA_util_to_json_from_pandas(__data))
         except Exception as e:
             QA_util_log_info(e)
 
@@ -200,16 +216,22 @@ def QA_SU_save_index_day(client=QA_Setting.client):
             end_time = str(now_time())[0:10]
             if ref_.count() > 0:
                 start_time = ref_[ref_.count() - 1]['date']
+
+
+                QA_util_log_info('##JOB04 Now Saving INDEX_DAY==== \n Trying updating %s from %s to %s' %
+                                (code, start_time, end_time))
+
+                if start_time != end_time:
+                    coll.insert_many(
+                        QA_util_to_json_from_pandas(
+                            QA_fetch_get_index_day(str(code), start_time, end_time)[1::]))
             else:
                 start_time = '1990-01-01'
-
-            QA_util_log_info('##JOB04 Now Saving INDEX_DAY==== \n Trying updating %s from %s to %s' %
-                             (code, start_time, end_time))
-
-            if start_time != end_time:
+                QA_util_log_info('##JOB04 Now Saving INDEX_DAY==== \n Trying updating %s from %s to %s' %
+                                (code, start_time, end_time))
                 coll.insert_many(
                     QA_util_to_json_from_pandas(
-                        QA_fetch_get_index_day(str(code), start_time, end_time)[1::]))
+                        QA_fetch_get_index_day(str(code), start_time, end_time)))
         except:
             err.append(str(code))
     for i_ in range(len(__index_list)):
@@ -242,17 +264,25 @@ def QA_SU_save_index_min(client=QA_Setting.client):
                 end_time = str(now_time())[0:19]
                 if ref_.count() > 0:
                     start_time = ref_[ref_.count() - 1]['datetime']
+
+                    QA_util_log_info(
+                        '##JOB05.%s Now Saving %s from %s to %s ==%s ' % (['1min', '5min', '15min', '30min', '60min'].index(type), str(code), start_time, end_time, type))
+                    if start_time != end_time:
+                        __data = QA_fetch_get_index_min(
+                            str(code), start_time, end_time, type)
+                        if len(__data) > 1:
+                            coll.insert_many(
+                                QA_util_to_json_from_pandas(__data[1::]))
                 else:
                     start_time = '2015-01-01'
-                QA_util_log_info(
-                    '##JOB05.%s Now Saving %s from %s to %s ==%s ' % (['1min', '5min', '15min', '30min', '60min'].index(type), str(code), start_time, end_time, type))
-                if start_time != end_time:
-                    __data = QA_fetch_get_index_min(
-                        str(code), start_time, end_time, type)
-                    if len(__data) > 1:
-                        coll.insert_many(
-                            QA_util_to_json_from_pandas(__data[1::]))
-
+                    QA_util_log_info(
+                        '##JOB05.%s Now Saving %s from %s to %s ==%s ' % (['1min', '5min', '15min', '30min', '60min'].index(type), str(code), start_time, end_time, type))
+                    if start_time != end_time:
+                        __data = QA_fetch_get_index_min(
+                            str(code), start_time, end_time, type)
+                        if len(__data) > 1:
+                            coll.insert_many(
+                                QA_util_to_json_from_pandas(__data))
         except:
             err.append(code)
 
@@ -288,16 +318,24 @@ def QA_SU_save_etf_day(client=QA_Setting.client):
             end_time = str(now_time())[0:10]
             if ref_.count() > 0:
                 start_time = ref_[ref_.count() - 1]['date']
+
+
+                QA_util_log_info('##JOB06 Now Saving ETF_DAY==== \n Trying updating %s from %s to %s' %
+                                (code, start_time, end_time))
+
+                if start_time != end_time:
+                    coll.insert_many(
+                        QA_util_to_json_from_pandas(
+                            QA_fetch_get_index_day(str(code), start_time, end_time)[1::]))
             else:
                 start_time = '1990-01-01'
+                QA_util_log_info('##JOB06 Now Saving ETF_DAY==== \n Trying updating %s from %s to %s' %
+                                (code, start_time, end_time))
 
-            QA_util_log_info('##JOB06 Now Saving ETF_DAY==== \n Trying updating %s from %s to %s' %
-                             (code, start_time, end_time))
-
-            if start_time != end_time:
-                coll.insert_many(
-                    QA_util_to_json_from_pandas(
-                        QA_fetch_get_index_day(str(code), start_time, end_time)[1::]))
+                if start_time != end_time:
+                    coll.insert_many(
+                        QA_util_to_json_from_pandas(
+                            QA_fetch_get_index_day(str(code), start_time, end_time)))
         except:
             err.append(str(code))
     for i_ in range(len(__index_list)):
@@ -332,17 +370,25 @@ def QA_SU_save_etf_min(client=QA_Setting.client):
                 end_time = str(now_time())[0:19]
                 if ref_.count() > 0:
                     start_time = ref_[ref_.count() - 1]['datetime']
+
+                    QA_util_log_info(
+                        '##JOB07.%s Now Saving %s from %s to %s ==%s ' % (['1min', '5min', '15min', '30min', '60min'].index(type), str(code), start_time, end_time, type))
+                    if start_time != end_time:
+                        __data = QA_fetch_get_index_min(
+                            str(code), start_time, end_time, type)
+                        if len(__data) > 1:
+                            coll.insert_many(
+                                QA_util_to_json_from_pandas(__data[1::]))
                 else:
                     start_time = '2015-01-01'
-                QA_util_log_info(
-                    '##JOB07.%s Now Saving %s from %s to %s ==%s ' % (['1min', '5min', '15min', '30min', '60min'].index(type), str(code), start_time, end_time, type))
-                if start_time != end_time:
-                    __data = QA_fetch_get_index_min(
-                        str(code), start_time, end_time, type)
-                    if len(__data) > 1:
-                        coll.insert_many(
-                            QA_util_to_json_from_pandas(__data[1::]))
-
+                    QA_util_log_info(
+                        '##JOB07.%s Now Saving %s from %s to %s ==%s ' % (['1min', '5min', '15min', '30min', '60min'].index(type), str(code), start_time, end_time, type))
+                    if start_time != end_time:
+                        __data = QA_fetch_get_index_min(
+                            str(code), start_time, end_time, type)
+                        if len(__data) > 1:
+                            coll.insert_many(
+                                QA_util_to_json_from_pandas(__data))
         except:
             err.append(code)
 
