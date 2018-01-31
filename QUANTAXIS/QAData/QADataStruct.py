@@ -159,6 +159,30 @@ class _quotation_base():
         else:
             return None
 
+    """为了方便调用  增加一些容易写错的情况
+    """
+
+    HIGH=high
+    High=high
+    LOW=low
+    Low=low
+    CLOSE=close
+    Close=close
+    VOLUME=vol
+    Volume=vol
+    VOL=vol
+    Vol=vol
+    
+    @property
+    @lru_cache()
+    def OPEN(self):
+        return self.open
+
+    @property
+    @lru_cache()
+    def Open(self):
+        return self.open
+
     @property
     @lru_cache()
     def price(self):
@@ -555,10 +579,10 @@ class QA_DataStruct_Stock_day(_quotation_base):
         super().__init__(DataFrame, dtype, if_fq)
         if 'high_limit' not in self.data.columns:
             self.data['high_limit'] = round(
-                (self.data.close.shift(-1) + 0.0002) * 1.1, 2)
+                (self.data.close.shift(1) + 0.0002) * 1.1, 2)
         if 'low_limit' not in self.data.columns:
             self.data['low_limit'] = round(
-                (self.data.close.shift(-1) + 0.0002) * 0.9, 2)
+                (self.data.close.shift(1) + 0.0002) * 0.9, 2)
 
     def __repr__(self):
         return '< QA_DataStruct_Stock_day with {} securities >'.format(len(self.code))
@@ -615,10 +639,10 @@ class QA_DataStruct_Stock_min(_quotation_base):
                 'code', 'open', 'high', 'low', 'close', 'volume', 'datetime', 'date']]
         if 'high_limit' not in self.data.columns:
             self.data['high_limit'] = round(
-                (self.data.close.shift(-1) + 0.0002) * 1.1, 2)
+                (self.data.close.shift(1) + 0.0002) * 1.1, 2)
         if 'low_limit' not in self.data.columns:
             self.data['low_limit'] = round(
-                (self.data.close.shift(-1) + 0.0002) * 0.9, 2)
+                (self.data.close.shift(1) + 0.0002) * 0.9, 2)
         self.type = dtype
         self.if_fq = if_fq
         self.mongo_coll = DATABASE.stock_min
@@ -672,7 +696,7 @@ class QA_DataStruct_Stock_min(_quotation_base):
         return self.data.low_limit
 
 
-class QA_DataStruct_future_day(_quotation_base):
+class QA_DataStruct_Future_day(_quotation_base):
     def __init__(self, DataFrame, dtype='future_day', if_fq=''):
         self.type = 'future_day'
         self.data = DataFrame.ix[:, [
@@ -684,7 +708,7 @@ class QA_DataStruct_future_day(_quotation_base):
     __str__ = __repr__
 
 
-class QA_DataStruct_future_min(_quotation_base):
+class QA_DataStruct_Future_min(_quotation_base):
     def __init__(self, DataFrame, dtype='future_min', if_fq=''):
         self.type = 'future_day'
         self.data = DataFrame.ix[:, [
