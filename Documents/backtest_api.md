@@ -1,73 +1,149 @@
-# QABacktest 的 api
+# 账户/组合/策略的说明 QAARP模块
 
+
+<!-- TOC -->
+
+- [账户/组合/策略的说明 QAARP模块](#账户组合策略的说明-qaarp模块)
+    - [账户/组合/策略的关系](#账户组合策略的关系)
+    - [创建自定义的策略](#创建自定义的策略)
+
+<!-- /TOC -->
+@yutiansut
+2018/1/26
+在1.0版本以后,回测的策略是以继承账户类来进行的
+
+## 账户/组合/策略的关系
+
+{
+  UserA:{
+    PortfolioA1:{
+      AccountA : Strategy1,
+      AccountB : Strategy2
+  },PortfolioA2:{
+      AccountC : Strategy3
+  }
+  UserB:{
+    PortfolioB1:{
+      AccountD : Strategy4
+    }
+  }
+}
 
 ```python
-from QUANTAXIS import QA_Backtest as QB
-#常量:
-QB.backtest_type #回测类型 day/1min/5min/15min/30min/60min/index_day/index_1min/index_5min/index_15min/index_30min/index_60min/
-QB.account.message  #当前账户消息
-QB.account.cash  #当前可用资金
-QB.account.hold # 当前账户持仓
-QB.account.history #当前账户的历史交易记录
-QB.account.assets #当前账户总资产
-QB.account.detail #当前账户的交易对账单
-QB.account.init_assest #账户的最初资金
-QB.strategy_gap #前推日期
-QB.strategy_name #策略名称
 
-QB.strategy_stock_list #回测初始化的时候  输入的一个回测标的
-QB.strategy_start_date #回测的开始时间
-QB.strategy_end_date  #回测的结束时间
+# 在这里我们展示如何创建一个组合/创建账户/增加已有账户
+import QUANTAXIS as QA
 
+# 创建用户
+userA=QA.QA_User()
 
-QB.today  #在策略里面代表策略执行时的日期
-QB.now  #在策略里面代表策略执行时的时间
-QB.benchmark_code  #策略业绩评价的对照行情
+# 创建两个组合 A1,A2
+PortfolioA1=userA.new_portfolio()
+PortfolioA2=userA.new_portfolio()
 
-QB.backtest_print_log = True  # 是否在屏幕上输出结果
+# A1里面增加两个策略(新建)
+strategy1=PortfolioA1.new_account()
+strategy2=PortfolioA1.new_account()
+
+# 打印user的组合
+In []: userA.portfolio_list
+Out[]:
+{'Portfolio_WpsaoQY6': < QA_Portfolio Portfolio_WpsaoQY6 with 0 Accounts >,
+ 'Portfolio_w5uJvtf7': < QA_Portfolio Portfolio_w5uJvtf7 with 2 Accounts >}
 
 
-QB.setting.QA_setting_user_name = str('admin') #回测账户
-QB.setting.QA_setting_user_password = str('admin') #回测密码
+# 打印组合A1
+In []: PortfolioA1
+Out[]:  < QA_Portfolio Portfolio_w5uJvtf7 with 2 Accounts >
 
 
-#函数:
-#获取市场(基于gap)行情:
-QB.QA_backtest_get_market_data(QB,code,QB.today/QB.now)
-- 可选项: gap_ 
-- 可选项: type_ 'lt','lte' 默认是lt
-#获取单个bar
-QB.QA_backtest_get_market_data_bar(QB,code,QB.today/QB.now)
+# 打印策略 本质是Account类
+In []: strategy1
+Out[]: < QA_Account Acc_qHL6dSC4>
 
-#拿到开高收低量
-Open,High,Low,Close,Volume=QB.QA_backtest_get_OHLCV(QB,QB.QA_backtest_get_market_data(QB,item,QB.today))
 
-#获取市场自定义时间段行情:
-QA.QA_fetch_stock_day(code,start,end,model)
+# 创建一个策略 自定义on_bar事件
+class Strategy3(QA.QA_Strategy):
+  def __init__(self):
+    super().__init__()
 
-#一键平仓:
-QB.QA_backtest_sell_all(QB)
+  def on_bar(self,event):
+    print(event)
 
-#报单:
-QB.QA_backtest_send_order(QB, code,amount,towards,order: dict)
-"""
-order有三种方式:
-1.限价成交 order['bid_model']=0或者l,L
-  注意: 限价成交需要给出价格:
-  order['price']=xxxx
+# 实例化该策略到strategy3
+In []: strategy3=Strategy3()
 
-2.市价成交 order['bid_model']=1或者m,M,market,Market  [其实是以bar的开盘价成交]
-3.严格成交模式 order['bid_model']=2或者s,S
-    及 买入按bar的最高价成交 卖出按bar的最低价成交
-3.收盘价成交模式 order['bid_model']=3或者c,C
-"""
-#查询当前一只股票的持仓量
-QB.QA_backtest_hold_amount(QB,code)
-#查询当前一只股票的可卖数量
-QB.QA_backtest_sell_available(QB,code)
-#查询当前一只股票的持仓平均成本
-QB.QA_backtest_hold_price(QB,code)
+# 打印strategy3
+In []: strategy3
+Out[]: < QA_Account Acc_AZPD18vS>
+
+# 把该策略加载到A2组合中
+In []: PortfolioA2.add_account(strategy3)
+
+# 打印A2
+In []: PortfolioA2
+Out[]: < QA_Portfolio Portfolio_w7sx5Q31 with 1 Accounts >
+
+# 打印组合列表
+
+In []: userA.portfolio_list
+Out[]:
+{'Portfolio_WpsaoQY6': < QA_Portfolio Portfolio_WpsaoQY6 with 1 Accounts >,
+ 'Portfolio_w5uJvtf7': < QA_Portfolio Portfolio_w5uJvtf7 with 2 Accounts >}
+
+
 
 ```
 
 
+## 创建自定义的策略
+
+
+```python
+from QUANTAXIS.QAARP.QAStrategy import QA_Strategy
+from QUANTAXIS.QAUtil.QAParameter import (AMOUNT_MODEL, MARKET_TYPE,
+                                          FREQUENCE, ORDER_DIRECTION,
+                                          ORDER_MODEL)
+from QUANTAXIS.QAUtil.QALogs import QA_util_log_info
+
+class MAStrategy(QA_Strategy):
+    def __init__(self):
+        super().__init__()
+        self.frequence = FREQUENCE.DAY
+        self.market_type = MARKET_TYPE.STOCK_CN
+
+    def on_bar(self, event):
+        sellavailable=self.sell_available
+        try:
+            for item in event.market_data.code:
+                if sellavailable is None:
+
+                    event.send_order(account_id=self.account_cookie,
+                                     amount=100, amount_model=AMOUNT_MODEL.BY_AMOUNT,
+                                     time=self.current_time, code=item, price=0,
+                                     order_model=ORDER_MODEL.MARKET, towards=ORDER_DIRECTION.BUY,
+                                     market_type=self.market_type, frequence=self.frequence,
+                                     broker_name=self.broker)
+
+                else:
+                    if sellavailable.get(item, 0) > 0:
+                        event.send_order(account_id=self.account_cookie,
+                                         amount=sellavailable[item], amount_model=AMOUNT_MODEL.BY_AMOUNT,
+                                         time=self.current_time, code=item, price=0,
+                                         order_model=ORDER_MODEL.MARKET, towards=ORDER_DIRECTION.SELL,
+                                         market_type=self.market_type, frequence=self.frequence,
+                                         broker_name=self.broker
+                                         )
+                    else:
+                        event.send_order(account_id=self.account_cookie,
+                                         amount=100, amount_model=AMOUNT_MODEL.BY_AMOUNT,
+                                         time=self.current_time, code=item, price=0,
+                                         order_model=ORDER_MODEL.MARKET, towards=ORDER_DIRECTION.BUY,
+                                         market_type=self.market_type, frequence=self.frequence,
+                                         broker_name=self.broker)
+
+        except:
+            pass
+
+
+```

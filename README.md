@@ -13,14 +13,14 @@
 
 
 
-![version](https://img.shields.io/badge/Version-%200.5.30-orange.svg)
+![version](https://img.shields.io/badge/Version-%201.0.3-orange.svg)
 ![build](https://travis-ci.org/QUANTAXIS/QUANTAXIS.svg?branch=master)
 [![Codefresh build status]( https://g.codefresh.io/api/badges/build?repoOwner=yutiansut&repoName=QUANTAXIS&branch=master&pipelineName=QUANTAXIS&accountName=yutiansut_marketplace&type=cf-1)]( https://g.codefresh.io/repositories/yutiansut/QUANTAXIS/builds?filter=trigger:build;branch:master;service:5a30c1026e9d6c0001c5143b~QUANTAXIS)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d8504e4af33747bb8117579212425af9)](https://www.codacy.com/app/yutiansut/QUANTAXIS?utm_source=github.com&utm_medium=referral&utm_content=yutiansut/QUANTAXIS&utm_campaign=badger)
 [![Stories in Ready](https://badge.waffle.io/yutiansut/QUANTAXIS.svg?label=ready&title=Ready)](http://waffle.io/yutiansut/QUANTAXIS)
 [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/yutiansut/quantaxis)
 ![QAS](https://img.shields.io/badge/QAS-%200.0.8-brown.svg)
-![Pypi](https://img.shields.io/badge/Pypi-%200.5.30-blue.svg)
+![Pypi](https://img.shields.io/badge/Pypi-%201.0.3-blue.svg)
 ![python](https://img.shields.io/badge/python-%203.6/3.5/3.4/win/ubuntu-darkgrey.svg)
 ![Npm](https://img.shields.io/badge/Npm-%200.4.0-yellow.svg)
 ![author](https://img.shields.io/badge/Powered%20by-%20%20yutiansut-red.svg)
@@ -36,6 +36,9 @@
 期货回测/实盘框架
 [ParadoxTrading](https://github.com/ppaanngggg/ParadoxTrading)
 
+RAINX大大的pytdx
+[PYTDX](https://github.com/rainx/pytdx)
+
 (逃~~)
 
 ---
@@ -49,7 +52,7 @@ QUANTAXIS量化金融策略框架,是一个面向中小型策略团队的量化�
 
 - [QUANTAXIS 量化金融策略框架](#quantaxis-量化金融策略框架)
     - [功能](#功能)
-    - [公告](#公告)
+    - [文档](#文档)
     - [安装和部署](#安装和部署)
     - [更新](#更新)
     - [Docker](#docker)
@@ -99,27 +102,19 @@ QUANTAXIS量化金融策略框架,是一个面向中小型策略团队的量化�
 - 成交记录分析器
 
 ```
-[注意: tushare最新版本因为单方面直接复制了pytdx  所以导致和最新版本的pytdx不兼容 如有安装0.8.7版本以上的tushare 请降级使用]
+[注意: tushare 1.0以上的版本内置了一个pytdx  所以导致和最新版本的pytdx不兼容 如有安装0.8.7版本以上的tushare 请降级使用]
 
 *** 降级时需注意: 直接pip uninstall tushare以后 还要去删掉tushare安装目录下的pytdx 再重新安装最新版本的pytdx ***
 
 ```
 
-## 公告
+## 文档
 
-近期正在对QUANTAXIS的部分代码在重构 欢迎加群来一起讨论/发PR
+文档参见: [book](http://book.yutiansut.com)
 
+下载文档手册 
 
-
-![](http://osnhakmay.bkt.clouddn.com/remakedoc_account.png)
-
-
-
-![](http://osnhakmay.bkt.clouddn.com/%E9%87%8D%E6%9E%84%E6%96%87%E6%A1%A3-%E5%B8%82%E5%9C%BA.png)
-
-
-
-![](http://osnhakmay.bkt.clouddn.com/remakedoc_event.png)
+[PDF](https://www.gitbook.com/download/pdf/book/quantaxis/quantaxis) | [MOBI](https://www.gitbook.com/download/mobi/book/quantaxis/quantaxis) | [EPUB](https://www.gitbook.com/download/epub/book/quantaxis/quantaxis)
 
 ## 安装和部署
 

@@ -26,19 +26,22 @@
 import json
 import os
 import pymongo
+import sys
+import time
 
 from pytdx.reader import TdxMinBarReader
 
-from QUANTAXIS.QAUtil import (QA_Setting, QA_util_date_stamp, QA_util_log_info,
+from QUANTAXIS.QAUtil import (DATABASE, QA_util_date_stamp, QA_util_log_info,
                               QA_util_time_stamp)
 
 
-def QA_save_tdx_to_mongo(file_dir, client=QA_Setting.client):
+def QA_save_tdx_to_mongo(file_dir, client=DATABASE):
     reader = TdxMinBarReader()
     __coll = client.stock_min
     __coll.create_index([('code', pymongo.ASCENDING), \
                          ('type', pymongo.ASCENDING), \
                          ('time_stamp', pymongo.ASCENDING)], unique=True)
+    # __coll = client.quantaxis.stock_min_five
     for a, v, files in os.walk(file_dir):
 
         for file in files:
