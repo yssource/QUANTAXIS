@@ -40,8 +40,6 @@ from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
 """
 
 
-
-
 def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collections=DATABASE.stock_day):
     '获取股票日线'
     start = str(start)[0:10]
@@ -140,7 +138,7 @@ def QA_fetch_stock_list(collections=DATABASE.stock_list):
 def QA_fetch_stock_full(date, format='numpy', collections=DATABASE.stock_day):
     '获取全市场的某一日的数据'
     Date = str(date)[0:10]
-    if QA_util_date_valid(Date) == True:
+    if QA_util_date_valid(Date) is True:
 
         __data = []
         for item in collections.find({
@@ -148,7 +146,7 @@ def QA_fetch_stock_full(date, format='numpy', collections=DATABASE.stock_day):
                 "$lte": QA_util_date_stamp(Date),
                 "$gte": QA_util_date_stamp(Date)}}):
             __data.append([str(item['code']), float(item['open']), float(item['high']), float(
-                item['low']), float(item['close']), float(item['volume']), item['date']])
+                item['low']), float(item['close']), float(item['vol']), item['date']])
         # 多种数据格式
         if format in ['n', 'N', 'numpy']:
             __data = numpy.asarray(__data)
@@ -158,7 +156,7 @@ def QA_fetch_stock_full(date, format='numpy', collections=DATABASE.stock_day):
             __data = DataFrame(__data, columns=[
                 'code', 'open', 'high', 'low', 'close', 'volume', 'date'])
             __data['date'] = pd.to_datetime(__data['date'])
-            __data = __data.set_index('date', drop=True)
+            __data = __data.set_index('date', drop=False)
         return __data
     else:
         QA_util_log_info('something wrong with date')
@@ -281,7 +279,6 @@ def QA_fetch_stock_xdxr(code, format='pd', collections=DATABASE.stock_xdxr):
         {'code': code})]).drop(['_id'], axis=1)
     data['date'] = pd.to_datetime(data['date'])
     return data.set_index('date', drop=False)
-    # data['date']=data['date'].apply(lambda)
 
 
 def QA_fetch_backtest_info(user=None, account_cookie=None, strategy=None, stock_list=None, collections=DATABASE.backtest_info):
@@ -322,27 +319,27 @@ def QA_fetch_stock_name(code, collections=DATABASE.stock_list):
         QA_util_log_info(e)
 
 
-def QA_fetch_quotation(code, db=DATABASE):
+def QA_fetch_quotation(code, date=datetime.date.today(), db=DATABASE):
+    '获取某一只实时5档行情的存储结果'
     try:
         collections = db.get_collection(
-            'realtime_{}'.format(datetime.date.today()))
-        return collections.find({'code': code}).sort('datetime', QA_util_sql_mongo_sort_DESCENDING)[0]
+            'realtime_{}'.format(date))
+        return pd.DataFrame([item for item in collections.find(
+            {'code': code})]).drop(['_id'], axis=1).set_index('datetime', drop=False).sort_index()
     except Exception as e:
         raise e
 
 
-def QA_fetch_quotations(time=None, db=DATABASE):
-
+def QA_fetch_quotations(date=datetime.date.today(), db=DATABASE):
+    '获取全部实时5档行情的存储结果'
     try:
         collections = db.get_collection(
-            'realtime_{}'.format(datetime.date.today()))
-        times = collections.find({'code': '000001'}).sort(
-            'datetime', QA_util_sql_mongo_sort_DESCENDING)[0]['datetime']
-
-        return pd.DataFrame([item for item in collections.find({'datetime': times})]).drop(['_id'], axis=1)
+            'realtime_{}'.format(date))
+        return pd.DataFrame([item for item in collections.find(
+            {})]).drop(['_id'], axis=1).set_index('datetime', drop=False).sort_index()
     except Exception as e:
         raise e
 
 
 if __name__ == '__main__':
-    print(QA_fetch_quotations())
+    print(QA_fetch_quotations('000001'))

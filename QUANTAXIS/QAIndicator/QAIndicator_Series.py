@@ -121,6 +121,20 @@ def REF(Series, N):
     return var
 
 
+def LAST(COND, N1, N2):
+    """表达持续性
+
+    Arguments:
+        COND {[type]} -- [description]
+        N1 {[type]} -- [description]
+        N2 {[type]} -- [description]
+    """
+    N2=1 if N2==0 else N2
+    assert N2>0
+    assert N1>N2
+    return COND.iloc[-N1:-N2].all()
+
+
 def STD(Series, N):
     return pd.Series.rolling(Series, N).std()
 

@@ -32,6 +32,7 @@ from QUANTAXIS.QAData import (QA_DataStruct_Index_day, QA_DataStruct_Index_min,
                               QA_DataStruct_Stock_transaction)
 from QUANTAXIS.QAFetch.QAQuery import (QA_fetch_indexlist_day,
                                        QA_fetch_stocklist_day,
+                                       QA_fetch_stock_full,
                                        QA_fetch_stocklist_min)
 from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
                               QA_util_date_valid, QA_util_log_info,
@@ -65,7 +66,7 @@ def QA_fetch_stock_day_adv(
             __data = DataFrame(__data, columns=[
                 'code', 'open', 'high', 'low', 'close', 'volume', 'amount', 'date'])
             __data['date'] = pd.to_datetime(__data['date'])
-            return QA_DataStruct_Stock_day(__data.query('volume>1').set_index(['date', 'code'], drop=if_drop_index))
+            return QA_DataStruct_Stock_day(__data.query('volume>1').set_index(['date', 'code'], drop=if_drop_index).sort_index())
         else:
             QA_util_log_info('something wrong with date')
     elif isinstance(code, list):
@@ -80,7 +81,7 @@ def QA_fetch_stocklist_day_adv(
         if_drop_index=False,
         collections=DATABASE.stock_day):
     '获取股票日线'
-    return QA_DataStruct_Stock_day(pd.concat(QA_fetch_stocklist_day(code, [start, end])).query('volume>1').set_index(['date', 'code'], drop=if_drop_index))
+    return QA_DataStruct_Stock_day(pd.concat(QA_fetch_stocklist_day(code, [start, end])).query('volume>1').set_index(['date', 'code'], drop=if_drop_index).sort_index())
 
 
 def QA_fetch_stock_min_adv(
@@ -126,7 +127,7 @@ def QA_fetch_stock_min_adv(
         return QA_DataStruct_Stock_min(__data.query('volume>1').set_index(['datetime', 'code'], drop=if_drop_index))
     elif isinstance(code, list):
         '新增codelist的代码'
-        return QA_DataStruct_Stock_min(pd.concat([QA_fetch_stock_min_adv(code_, start, end, frequence, if_drop_index).data for code_ in code]).set_index(['datetime', 'code'], drop=if_drop_index))
+        return QA_DataStruct_Stock_min(pd.concat([QA_fetch_stock_min_adv(code_, start, end, frequence, if_drop_index).data for code_ in code]).set_index(['datetime', 'code'], drop=if_drop_index).sort_index())
 
 
 def QA_fetch_stocklist_min_adv(
@@ -134,9 +135,11 @@ def QA_fetch_stocklist_min_adv(
         start, end=None,
         frequence='1min',
         if_drop_index=False,  collections=DATABASE.stock_min):
-    return QA_DataStruct_Stock_min(pd.concat(QA_fetch_stocklist_min(code, [start, end], frequence)).query('volume>1').set_index(['datetime', 'code'], drop=if_drop_index))
+    return QA_DataStruct_Stock_min(pd.concat(QA_fetch_stocklist_min(code, [start, end], frequence)).query('volume>1').set_index(['datetime', 'code'], drop=if_drop_index).sort_index())
 
-
+def QA_fetch_stock_day_full_adv(date):
+    '返回全市场某一天的数据'
+    return QA_DataStruct_Stock_day(QA_fetch_stock_full(date,'pd').set_index(['date','code'],drop=False))
 def QA_fetch_index_day_adv(
         code,
         start, end=None,
@@ -158,12 +161,12 @@ def QA_fetch_index_day_adv(
             __data = DataFrame(__data, columns=[
                 'code', 'open', 'high', 'low', 'close', 'volume', 'date'])
             __data['date'] = pd.to_datetime(__data['date'])
-            return QA_DataStruct_Index_day(__data.query('volume>1').set_index(['date', 'code'], drop=if_drop_index))
+            return QA_DataStruct_Index_day(__data.query('volume>1').set_index(['date', 'code'], drop=if_drop_index).sort_index())
         else:
             QA_util_log_info('something wrong with date')
 
     elif isinstance(code, list):
-        return QA_DataStruct_Index_day(pd.concat(QA_fetch_indexlist_day(code, [start, end])).query('volume>1').set_index(['date', 'code'], drop=if_drop_index))
+        return QA_DataStruct_Index_day(pd.concat(QA_fetch_indexlist_day(code, [start, end])).query('volume>1').set_index(['date', 'code'], drop=if_drop_index).sort_index())
 
 
 def QA_fetch_index_min_adv(
@@ -204,10 +207,10 @@ def QA_fetch_index_min_adv(
             'code', 'open', 'high', 'low', 'close', 'volume', 'datetime', 'time_stamp', 'date'])
 
         __data['datetime'] = pd.to_datetime(__data['datetime'])
-        return QA_DataStruct_Index_min(__data.query('volume>1').set_index(['datetime', 'code'], drop=if_drop_index))
+        return QA_DataStruct_Index_min(__data.query('volume>1').set_index(['datetime', 'code'], drop=if_drop_index).sort_index())
 
     elif isinstance(code, list):
-        return QA_DataStruct_Index_min(pd.concat([QA_fetch_index_min_adv(code_, start, end, frequence, if_drop_index).data for code_ in code]).set_index(['datetime', 'code'], drop=if_drop_index))
+        return QA_DataStruct_Index_min(pd.concat([QA_fetch_index_min_adv(code_, start, end, frequence, if_drop_index).data for code_ in code]).set_index(['datetime', 'code'], drop=if_drop_index).sort_index())
 
 
 def QA_fetch_stock_transaction_adv(

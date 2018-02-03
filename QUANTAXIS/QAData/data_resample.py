@@ -30,6 +30,15 @@ from QUANTAXIS.QAFetch import QA_fetch_get_stock_transaction
 
 
 def QA_data_tick_resample(tick, type_='1min'):
+    """tick采样成任意级别分钟线
+
+    Arguments:
+        tick {[type]} -- transaction
+
+    Returns:
+        [type] -- [description]
+    """
+
     data = tick['price'].resample(
         type_, label='right', closed='left').ohlc()
 
@@ -37,21 +46,21 @@ def QA_data_tick_resample(tick, type_='1min'):
         type_, label='right', closed='left').sum()
     data['code'] = tick['code'][0]
 
-    __data_ = pd.DataFrame()
+    data = pd.DataFrame()
     _temp = tick.drop_duplicates('date')['date']
     for item in _temp:
-        __data = data[item]
-        _data = __data[time(9, 31):time(11, 30)].append(
-            __data[time(13, 1):time(15, 0)])
-        __data_ = __data_.append(_data)
+        _data = data[item]
+        _data = _data[time(9, 31):time(11, 30)].append(
+            _data[time(13, 1):time(15, 0)])
+        data = data.append(_data)
 
-    __data_['datetime'] = __data_.index
-    __data_['date'] = __data_['datetime'].apply(lambda x: str(x)[0:10])
-    
-    return __data_.fillna(method='ffill').set_index(['datetime', 'code'], drop=False)
+    data['datetime'] = data.index
+    data['date'] = data['datetime'].apply(lambda x: str(x)[0:10])
+
+    return data.fillna(method='ffill').set_index(['datetime', 'code'], drop=False)
 
 
 if __name__ == '__main__':
-    tick = QA_fetch_get_stock_transaction(
+    tickz = QA_fetch_get_stock_transaction(
         'tdx', '000001', '2017-01-03', '2017-01-05')
-    print(QA_data_tick_resample(tick))
+    print(QA_data_tick_resample(tickz))
