@@ -1,4 +1,4 @@
-#coding :utf-8
+# coding=utf-8
 #
 # The MIT License (MIT)
 #
@@ -22,33 +22,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from email import encoders
+from email.header import Header
+from email.mime.text import MIMEText
+from email.utils import parseaddr, formataddr
+import smtplib
 
-from configparser import ConfigParser
 
-
-def QA_util_cfg_initial(CONFIG_FILE):
-    """[summary]
+def QA_util_send_mail(msg, title, from_user, from_password, to_addr, smtp):
+    """邮件发送
     
     Arguments:
-        CONFIG_FILE {[type]} -- [description]
+        msg {[type]} -- [description]
+        title {[type]} -- [description]
+        from_user {[type]} -- [description]
+        from_password {[type]} -- [description]
+        to_addr {[type]} -- [description]
+        smtp {[type]} -- [description]
     """
 
-    pass
+    msg = MIMEText(msg, 'plain', 'utf-8')
+    msg['Subject'] = Header(title, 'utf-8').encode()
+
+    server = smtplib.SMTP(smtp, 25)  # SMTP协议默认端口是25
+    server.set_debuglevel(1)
+    server.login(from_user, from_password)
+    server.sendmail(from_user, [to_addr], msg.as_string())
 
 
-def QA_util_get_cfg(__file_path, __file_name):
-    """[summary]
-    
-    Arguments:
-        __file_path {[type]} -- [description]
-        __file_name {[type]} -- [description]
-    
-    Returns:
-        [type] -- [description]
-    """
 
-    __setting_file = ConfigParser()
-    try:
-        return __setting_file.read(__file_path + __file_name)
-    except:
-        return 'wrong'
