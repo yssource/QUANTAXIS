@@ -100,11 +100,14 @@ def QA_SU_save_stock_day(client=DATABASE):
 
 
 def QA_SU_save_stock_xdxr(client=DATABASE):
-    client.drop_collection('stock_xdxr')
+    # client.drop_collection('stock_xdxr')
     stock_list = QA_fetch_get_stock_time_to_market()
     coll = client.stock_xdxr
-    coll.create_index([('code', pymongo.ASCENDING),
-                         ('date', pymongo.ASCENDING)], unique=True)
+    try:
+        coll.create_index([('code', pymongo.ASCENDING),
+                             ('date', pymongo.ASCENDING)], unique=True)
+    except:
+        pass
     err = []
 
     def __saving_work(code, coll):
@@ -436,10 +439,14 @@ def QA_SU_save_stock_block(client=DATABASE):
 
 
 def QA_SU_save_stock_info(client=DATABASE):
-    client.drop_collection('stock_info')
+    # client.drop_collection('stock_info')
     stock_list = QA_fetch_get_stock_time_to_market()
     coll = client.stock_info
-    coll.create_index('code')
+    try:
+        coll.create_index('code', unique=True)
+    except:
+        pass
+
     err = []
 
     def __saving_work(code, coll):
@@ -448,7 +455,7 @@ def QA_SU_save_stock_info(client=DATABASE):
         try:
             coll.insert_many(
                 QA_util_to_json_from_pandas(
-                    QA_fetch_get_stock_info(str(code))))
+                    QA_fetch_get_stock_info(str(code))), ordered=False)
 
         except:
             err.append(str(code))

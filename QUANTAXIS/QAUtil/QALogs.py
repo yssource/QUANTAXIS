@@ -39,12 +39,13 @@ from zenlog import logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s QUANTAXIS>>> %(message)s',
                     datefmt='%H:%M:%S',
-                    filename='quantaxis-' +
+                    filename='/tmp/quantaxis-' +
                     str(datetime.datetime.now().strftime(
                         '%Y-%m-%d-%H-%M-%S')) + '-.log',
                     filemode='w')
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
+# console.setLevel(logging.ERROR)
 formatter = logging.Formatter('QUANTAXIS>> %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
