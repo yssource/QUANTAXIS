@@ -13,7 +13,7 @@ export default new Router({
       path: '/',
       name: 'homePage',
       component: require('@/components/HomePage.vue')
-    },{
+    }, {
       path: '/status',
       name: 'status',
       component: require('@/components/Status.vue')
@@ -46,6 +46,10 @@ export default new Router({
         {
           'path': '/personal/monitor',
           component: require('@/components/Personal/monitor.vue')
+        },
+        {
+          'path': '/personal/traingame',
+          component: require('@/components/Personal/traingame.vue')
         },
         {
           'path': '/personal/history/:id',

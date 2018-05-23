@@ -29,16 +29,14 @@ __pycache__/
 
 #zip
 *.zip
-
 # C extensions
 *.so
 
 # Distribution / packaging
 .Python
 env/
-
+_build
 develop-eggs/
-downloads/
 eggs/
 .eggs/
 lib64/
@@ -152,3 +150,10 @@ kernel*.json
 
 # sqlite database
 *.db
+
+
+*.dad
+
+# yssource's configurations
+*.orig
+*.bk

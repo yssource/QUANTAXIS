@@ -30,11 +30,11 @@ import string
 import sys
 import platform
 import subprocess
-
+import requests
 
 from QUANTAXIS.QABacktest.QAAnalysis import QA_backtest_analysis_backtest
 from QUANTAXIS.QAUtil import QA_util_log_info, QA_Setting, QA_util_mongo_initial
-from QUANTAXIS import (QA_SU_save_stock_list, QA_SU_save_stock_min, QA_SU_save_stock_xdxr,
+from QUANTAXIS.QASU.main import (QA_SU_save_stock_list, QA_SU_save_stock_min, QA_SU_save_stock_xdxr,
                        QA_SU_save_stock_block, QA_SU_save_stock_info,
                        QA_SU_save_stock_day, QA_SU_save_index_day, QA_SU_save_index_min,
                        QA_SU_save_etf_day, QA_SU_save_etf_min)
@@ -66,18 +66,14 @@ class CLI(cmd.Cmd):
     def do_examples(self, arg):
         QA_util_log_info('QUANTAXIS example')
         now_path = os.getcwd()
-        project_dir = os.path.dirname(os.path.abspath(__file__))
-        file_dir = ''
-
-        if platform.system() == 'Windows':
-            file_dir = project_dir + '\\backtest.py'
-        elif platform.system() in ['Linux', 'Darwin']:
-            file_dir = project_dir + '/backtest.py'
-
-        shutil.copy(file_dir, now_path)
+        #project_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        data=requests.get('https://codeload.github.com/yutiansut/QADemo/zip/master')
+        with open("{}{}QADEMO.zip".format(now_path,os.sep), "wb") as code:
+            code.write(data.content)
 
         QA_util_log_info(
-            'Successfully generate a example strategy in :  ' + now_path)
+            'Successfully generate QADEMO in : {}, for more examples, please visit https://github.com/yutiansut/qademo'.format(now_path))
 
     def help_examples(self):
         print('make a sample backtest framework')
@@ -121,7 +117,30 @@ class CLI(cmd.Cmd):
         # 仅仅是为了初始化才在这里插入用户,如果想要注册用户,要到webkit底下注册
         if arg == '':
             print(
-                "Usage: save all|X|x|day|min|insert_user|stock_day|stock_xdxr|stock_min|index_day|index_min|etf_day|etf_min|stock_list|stock_block")
+                "Usage: \n\
+                save all  : save stock_day/xdxr/ index_day/ stock_list \n\
+                save X|x  : save stock_day/xdxr/min index_day/min etf_day/min stock_list/block \n\
+                save day  : save stock_day/xdxr index_day etf_day stock_list \n\
+                save min  : save stock_min/xdxr index_min etf_min stock_list \n\
+                ------------------------------------------------------------ \n\
+                save stock_day  : save stock_day \n\
+                save stock_xdxr : save stock_xdxr \n\
+                save stock_min  : save stock_min \n\
+                save index_day  : save index_day \n\
+                save index_min  : save index_min \n\
+                save etf_day    : save etf_day \n\
+                save etf_min    : save etf_min \n\
+                save stock_list : save stock_list \n\
+                save stock_block: save stock_block \n\
+                save stock_info : save stock_info \n\
+                ----------------------------------------------------------\n\
+                if you just want to save daily data just\n\
+                    save all+ save stock_block+save stock_info, it about 1G data \n\
+                if you want to save save the fully data including min level \n\
+                    save x + save stock_info \n \n\
+                @yutiansut\n\
+                @QUANTAXIS\n\
+                ")
         else:
             arg = arg.split(' ')
             if len(arg) == 1 and arg[0] == 'all':
@@ -163,7 +182,7 @@ class CLI(cmd.Cmd):
                 # QA_SU_save_etf_day('tdx')
                 QA_SU_save_etf_min('tdx')
                 QA_SU_save_stock_list('tdx')
-                QA_SU_save_stock_block('tdx')
+                # QA_SU_save_stock_block('tdx')
             elif len(arg) == 1 and arg[0] in ['X', 'x']:
                 if QA_Setting().client.quantaxis.user_list.find({'username': 'admin'}).count() == 0:
                     QA_Setting().client.quantaxis.user_list.insert(
@@ -195,6 +214,19 @@ class CLI(cmd.Cmd):
             QA_util_log_info(eval(arg))
         except:
             print(Exception)
+
+    def do_help(self, arg):
+        QA_util_log_info("Possible commands are:")
+        QA_util_log_info("save")
+        QA_util_log_info("clean")
+        QA_util_log_info("fn")
+        QA_util_log_info("drop_database")
+        QA_util_log_info("examples")
+        QA_util_log_info("shell")
+        QA_util_log_info("version")
+        QA_util_log_info("quit")
+        QA_util_log_info("exit")
+        QA_util_log_info('MORE EXAMPLE on https://github.com/yutiansut/QADemo')
 
     def help(self):
         QA_util_log_info('fn+methods name')

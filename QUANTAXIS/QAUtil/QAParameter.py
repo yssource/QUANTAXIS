@@ -100,11 +100,11 @@ class ORDER_STATUS():
 class AMOUNT_MODEL():
     """订单的成交量
 
-    by_price是按固定成交总额下单,动态计算成交量
-    by_amount 按固定成家量下单
+    by_money是按固定成交总额下单,动态计算成交量
+    by_amount 按固定数量下单
     """
 
-    BY_PRICE = 'by_price'
+    BY_MONEY = 'by_money'
     BY_AMOUNT = 'by_amount'
 
 
@@ -285,11 +285,16 @@ class DATASOURCE():
     """数据来源
     """
 
-    WIND = 'wind'
-    THS = 'ths'
-    TUSHARE = 'tushare'
-    TDX = 'tdx'
-    MONGO = 'mongo'
+    WIND = 'wind' # wind金融终端
+    TDB = 'tdb' # wind tdb
+    THS = 'ths' # 同花顺网页
+    TUSHARE = 'tushare' # tushare
+    TDX = 'tdx' # 通达信
+    MONGO = 'mongo' # 本地/远程Mongodb
+    EASTMONEY = 'eastmoney' # 东方财富网
+    CHOICE = 'choice' # choice金融终端
+    CCXT = 'ccxt' # github/ccxt 虚拟货币
+    LOCALFILE = 'localfile' # 本地文件
 
 
 class OUTPUT_FORMAT():

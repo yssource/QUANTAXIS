@@ -24,14 +24,19 @@ apt-get update
 
 apt install software-properties-common
 
-add-apt-repository ppa:jonathonf/python-3.6
-apt-get update
+# add-apt-repository ppa:jonathonf/python-3.6
+# apt-get update
 
-apt-get install python3.6
-apt-get install python3.6-dev
+
+# apt-get install python3.6-dev
+wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-5.1.0-Linux-x86_64.sh
+bash Anaconda3-5.1.0-Linux-x86_64.sh
+
+source ~/.bashrc
+
 wget https://bootstrap.pypa.io/get-pip.py
 
-python3.6 get-pip.py
+python get-pip.py
 
 
 apt-get install libxml2-dev libxslt-dev
@@ -41,10 +46,11 @@ git clone https://github.com/yutiansut/quantaxis
 # add some permission for quantaxis
 chmod -R 777 ./quantaxis
 cd ~/quantaxis
-python3.6 -m pip install pillow -i https://pypi.doubanio.com/simple
-python3.6 -m pip install -r requirements.txt -i https://pypi.doubanio.com/simple
-python3.6 -m pip install git+https://github.com/yutiansut/tushare
-pip install -e .
+python -m pip install pillow -i https://pypi.doubanio.com/simple
+python -m pip install -r requirements.txt -i https://pypi.doubanio.com/simple
+python -m pip install tushare
+python -m pip install pytdx
+python -m pip install -e .
 
 
 

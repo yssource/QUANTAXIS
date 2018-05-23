@@ -1,30 +1,34 @@
 # QUANTAXIS 的安装 Ubuntu篇
-<!-- TOC -->
+<!-- vscode-markdown-toc -->
+* 1. [一键部署](#)
+* 2. [手动部署](#-1)
+* 3. [换源](#-1)
+* 4. [安装python](#python)
+* 5. [安装git](#git)
+* 6. [下载安装quantaxis](#quantaxis)
+* 7. [安装mongo](#mongo)
+* 8. [安装nodejs](#nodejs)
+* 9. [安装QUANTAXIS_WEBKIT](#QUANTAXIS_WEBKIT)
 
-- [QUANTAXIS 的安装 Ubuntu篇](#quantaxis-的安装-ubuntu篇)
-    - [一键部署](#一键部署)
-    - [手动部署](#手动部署)
-    - [换源](#换源)
-    - [安装python](#安装python)
-    - [安装git](#安装git)
-    - [下载安装quantaxis](#下载安装quantaxis)
-    - [安装mongo](#安装mongo)
-    - [安装nodejs](#安装nodejs)
-    - [安装QUANTAXIS_WEBKIT](#安装quantaxis_webkit)
+<!-- vscode-markdown-toc-config
+	numbering=true
+	autoSave=true
+	/vscode-markdown-toc-config -->
+<!-- /vscode-markdown-toc -->
 
-<!-- /TOC -->
-
-
-## 一键部署
+##  1. <a name=''></a>一键部署
 
 ```
 wget https://raw.githubusercontent.com/yutiansut/QUANTAXIS/master/config/ubuntu16.sh
 sudo bash ./ubuntu16.sh
 ```
 
-## 手动部署
+在脚本运行中,遇到输入的时候 一律选```yes```或者 ```y```
 
-## 换源
+
+##  2. <a name='-1'></a>手动部署
+
+##  3. <a name='-1'></a>换源
 ```
 echo "deb-src http://archive.ubuntu.com/ubuntu xenial main restricted #Added by software-properties
 deb http://mirrors.aliyun.com/ubuntu/ xenial main restricted
@@ -47,40 +51,40 @@ deb http://mirrors.aliyun.com/ubuntu/ xenial-security multiverse " | tee /etc/ap
 
 apt-get update
 ```
-## 安装python
+##  4. <a name='python'></a>安装python
 ```
 apt install software-properties-common
 
 add-apt-repository ppa:jonathonf/python-3.6
 apt-get update
 
-apt-get install python3.6
 apt-get install python3.6-dev
 wget https://bootstrap.pypa.io/get-pip.py
 
 python3.6 get-pip.py
 ```
 
-## 安装git
+##  5. <a name='git'></a>安装git
 
 ```
 apt-get install git
 ```
 
-## 下载安装quantaxis
+##  6. <a name='quantaxis'></a>下载安装quantaxis
 
 ```
 cd ~
 git clone https://github.com/yutiansut/quantaxis
 cd ~/quantaxis
 python3.6 -m pip install -r requirements.txt -i https://pypi.doubanio.com/simple
-python3.6 -m pip install git+https://github.com/yutiansut/tushare
-pip install -e .
+python3.6 -m pip install tushare
+python3.6 -m pip install pytdx
+python3.6 -m pip install -e .
 
 ```
 
 
-## 安装mongo
+##  7. <a name='mongo'></a>安装mongo
 ```
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
 # Ubuntu 16.04
@@ -93,7 +97,7 @@ apt-get install -y mongodb-org --allow-unauthenticated
 
 ```
 
-## 安装nodejs
+##  8. <a name='nodejs'></a>安装nodejs
 
 ```
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
@@ -104,7 +108,7 @@ npm install forever -g #安装一个全局的forever 用于之后启动
 npm install cnpm -g
 ```
 
-## 安装QUANTAXIS_WEBKIT
+##  9. <a name='QUANTAXIS_WEBKIT'></a>安装QUANTAXIS_WEBKIT
 
 ```
 cd ~/quantaxis/QUANTAXIS_Webkit/backend
