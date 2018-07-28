@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import pandas as pd
+
 from QUANTAXIS.QAARP.QAPortfolio import QA_Portfolio
 from QUANTAXIS.QAUtil.QALogs import QA_util_log_info
 from QUANTAXIS.QAUtil.QARandom import QA_util_random_with_topic
@@ -45,7 +46,7 @@ class QA_User():
     @yutiansut 
     2018/05/08
 
-    @jerryw  添加注释，和 todo list
+    @jerryw  添加注释，和 🛠todo list
     2018/05/16
 
     @royburns  1.根据指定的user_cookie创建user； 2.添加对应的测试代码； 3.添加注释
@@ -86,17 +87,16 @@ class QA_User():
         '''
         self.setting.change(ip, port)
 
-
     def login(self, user_name, password):
         '''
         login to a database
-        todo： fix 返回 是否成功
+        🛠todo： fix 返回 是否成功
         :param user_name: 连接 mongodb 的用户名
         :param password:  连接 mongodb 的密码
         :return: Boolean 是否成功连接
         '''
         if self.setting.login(user_name, password):
-            QA_util_log_info('SUCCESS')
+            QA_util_log_info('✅SUCCESS')
             return True
         else:
             QA_util_log_info('FAILD')
@@ -109,12 +109,14 @@ class QA_User():
              如果存在 返回 新建的 QA_Portfolio
              如果已经存在 不返回 None
         '''
-        _portfolio = QA_Portfolio(user_cookie=self.user_cookie, portfolio_cookie=portfolio_cookie)
+        _portfolio = QA_Portfolio(
+            user_cookie=self.user_cookie, portfolio_cookie=portfolio_cookie)
         if _portfolio.portfolio_cookie not in self.portfolio_list.keys():
             self.portfolio_list[_portfolio.portfolio_cookie] = _portfolio
             return _portfolio
         else:
-            print(" prortfolio with user_cookie ", self.user_cookie , " already exist!!")
+            print(" prortfolio with user_cookie ",
+                  self.user_cookie, " already exist!!")
 
     def get_portfolio(self, portfolio):
         '''
@@ -123,8 +125,9 @@ class QA_User():
         :param portfolio: QA_Portfolio类型
         :return: QA_Portfolio类型
         '''
-        #return self.portfolio_list[portfolio]
-        return self.portfolio_list[portfolio.portfolio_cookie] #fix here use cookie as key to find value in dict
+        # return self.portfolio_list[portfolio]
+        # fix here use cookie as key to find value in dict
+        return self.portfolio_list[portfolio.portfolio_cookie]
 
     def get_portfolio_by_cookie(self, portfolio_cookie):
         '''
@@ -134,7 +137,6 @@ class QA_User():
         :return: QA_Portfolio类型
         '''
         return self.portfolio_list[portfolio_cookie]
-
 
     def generate_simpleaccount(self):
         """make a simple account with a easier way
@@ -155,17 +157,16 @@ class QA_User():
         :param account: 被注册的account
         :return:
         '''
-        #查找 portfolio
+        # 查找 portfolio
         if len(self.portfolio_list.keys()) < 1:
             po = self.new_portfolio()
         elif portfolio_cookie is not None:
             po = self.portfolio_list[portfolio_cookie]
         else:
             po = list(self.portfolio_list.values())[0]
-        #把account 添加到 portfolio中去
+        # 把account 添加到 portfolio中去
         po.add_account(account)
         return (po, account)
-
 
     def save(self):
         """

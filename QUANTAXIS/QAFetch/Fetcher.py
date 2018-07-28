@@ -43,18 +43,17 @@ from QUANTAXIS.QAUtil.QASql import QA_util_sql_mongo_setting
 
 
 class QA_Fetcher():
-    def __init__(self, ip='127.0.0.1', port=27017, username='',password=''):
+    def __init__(self, uri='mongodb://192.168.4.248:27017/quantaxis', username='',password=''):
         """
         初始化的时候 会初始化
         """
-        self.ip = ip
-        self.port = port
-        self.database = QA_util_sql_mongo_setting(ip, port).quantaxis
+
+        self.database = QA_util_sql_mongo_setting(uri).quantaxis
         self.history = {}
         self.best_ip=QATdx.select_best_ip()
 
-    def change_ip(self, ip, port):
-        self.database = QA_util_sql_mongo_setting(ip, port).quantaxis
+    def change_ip(self, uri):
+        self.database = QA_util_sql_mongo_setting(uri).quantaxis
         return self
 
     def get_quotation(self, code=None, start=None, end=None, frequence=None, market=None, source=None, output=None):
@@ -78,6 +77,7 @@ class QA_Fetcher():
             res=QAQuery.QA_fetch_stock_info(code,format=output,collections=self.database.stock_info)
             return res
 
+# todo 🛠 output 参数没有用到， 默认返回的 是 QA_DataStruct
 def QA_quotation(code, start, end, frequence, market, source, output):
     """一个统一的fetch
 
@@ -109,7 +109,17 @@ def QA_quotation(code, start, end, frequence, market, source, output):
         elif frequence is FREQUENCE.TICK:
             if source is DATASOURCE.TDX:
                 res = QATdx.QA_fetch_get_stock_transaction(code, start, end)
-    print(type(res))
+
+    #指数代码和股票代码是冲突重复的，  sh000001 上证指数  000001 是不同的
+    elif market is MARKET_TYPE.INDEX_CN:
+        if frequence is FREQUENCE.DAY:
+            if source is DATASOURCE.MONGO:
+                res = QAQueryAdv.QA_fetch_index_day_adv(code, start, end)
+
+    elif market is MARKET_TYPE.OPTION_CN:
+        if source is DATASOURCE.MONGO:
+            res = QAQueryAdv.QA_fetch_option_day_adv(code,start,end)
+    #print(type(res))
     return res
 
 
