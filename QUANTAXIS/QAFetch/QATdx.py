@@ -21,6 +21,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+#from QUANTAXIS.QAData.data_fq import QA_data_make_qfq, QA_data_make_hfq
+
+# 基于Pytdx的数据接口,好处是可以在linux/mac上联入通达信行情
+# 具体参见rainx的pytdx(https://github.com/rainx/pytdx)
+#
+
 import datetime
 
 import numpy as np
@@ -28,20 +35,16 @@ import pandas as pd
 from pytdx.exhq import TdxExHq_API
 from pytdx.hq import TdxHq_API
 
-from QUANTAXIS.QAUtil import (QA_util_date_stamp, QA_util_date_str2int,
-                              QA_util_date_valid, QA_util_get_real_date,
-                              QA_util_get_real_datelist, QA_util_get_trade_gap,
-                              QA_util_log_info, QA_util_time_stamp,
-                              QA_util_web_ping, future_ip_list, stock_ip_list, exclude_from_stock_ip_list, QA_Setting,
-                              trade_date_sse)
-
 from QUANTAXIS.QAFetch.base import _select_market_code, _select_type
+from QUANTAXIS.QAUtil import (QA_Setting, QA_util_date_stamp,
+                              QA_util_date_str2int, QA_util_date_valid,
+                              QA_util_get_real_date, QA_util_get_real_datelist,
+                              QA_util_future_to_realdatetime, QA_util_future_to_tradedatetime,
+                              QA_util_get_trade_gap, QA_util_log_info,
+                              QA_util_time_stamp, QA_util_web_ping,
+                              exclude_from_stock_ip_list, future_ip_list,
+                              stock_ip_list, trade_date_sse)
 from QUANTAXIS.QAUtil.QASetting import QASETTING
-#from QUANTAXIS.QAData.data_fq import QA_data_make_qfq, QA_data_make_hfq
-
-# 基于Pytdx的数据接口,好处是可以在linux/mac上联入通达信行情
-# 具体参见rainx的pytdx(https://github.com/rainx/pytdx)
-#
 
 
 def init_fetcher():
@@ -58,20 +61,39 @@ def ping(ip, port=7709, type_='stock'):
     try:
         if type_ in ['stock']:
             with api.connect(ip, port, time_out=0.7):
-                if len(api.get_security_list(0, 1)) > 800:
-                    return datetime.datetime.now() - __time1
+                res = api.get_security_list(0, 1)
+
+                if res is not None:
+                    if len(api.get_security_list(0, 1)) > 800:
+                        return datetime.datetime.now() - __time1
+                    else:
+                        print('BAD RESPONSE {}'.format(ip))
+                        return datetime.timedelta(9, 9, 0)
                 else:
+
                     print('BAD RESPONSE {}'.format(ip))
                     return datetime.timedelta(9, 9, 0)
         elif type_ in ['future']:
             with apix.connect(ip, port, time_out=0.7):
-                if apix.get_instrument_count() > 40000:
-                    return datetime.datetime.now() - __time1
+                res = apix.get_instrument_count()
+                if res is not None:
+                    if res > 40000:
+                        return datetime.datetime.now() - __time1
+                    else:
+                        print('️Bad FUTUREIP REPSONSE {}'.format(ip))
+                        return datetime.timedelta(9, 9, 0)
                 else:
                     print('️Bad FUTUREIP REPSONSE {}'.format(ip))
                     return datetime.timedelta(9, 9, 0)
-    except:
-        print('BAD RESPONSE {}'.format(ip))
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print(e)
+            print('Tushare内置的pytdx版本和QUANTAXIS使用的pytdx 版本不同, 请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+
+        else:
+            print('BAD RESPONSE {}'.format(ip))
         return datetime.timedelta(9, 9, 0)
 
 
@@ -97,7 +119,6 @@ def select_best_ip():
 
     ipdefault = eval(ipdefault) if isinstance(ipdefault, str) else ipdefault
     assert isinstance(ipdefault, dict)
-
 
     if ipdefault['stock']['ip'] == None:
 
@@ -128,7 +149,8 @@ def select_best_ip():
             best_future_ip = future_ip_list[data_future.index(
                 min(data_future))]
     ipbest = {'stock': best_stock_ip, 'future': best_future_ip}
-    qasetting.set_config(section='IPLIST', option='default', default_value=ipbest)
+    qasetting.set_config(
+        section='IPLIST', option='default', default_value=ipbest)
 
     QA_util_log_info('=== The BEST SERVER ===\n stock_ip {} future_ip {}'.format(
         best_stock_ip['ip'], best_future_ip['ip']))
@@ -206,12 +228,15 @@ def QA_fetch_get_security_bars(code, _type, lens, ip=None, port=None):
         data = pd.concat([api.to_df(api.get_security_bars(_select_type(_type), _select_market_code(
             code), code, (i - 1) * 800, 800)) for i in range(1, int(lens / 800) + 2)], axis=0)
         data = data\
-            .assign(datetime=pd.to_datetime(data['datetime']), code=str(code))\
             .drop(['year', 'month', 'day', 'hour', 'minute'], axis=1, inplace=False)\
-            .assign(date=data['datetime'].apply(lambda x: str(x)[0:10]))\
-            .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(x)))\
-            .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x)))\
-            .assign(type=_type).set_index('datetime', drop=False, inplace=False).tail(lens)
+            .assign(datetime=pd.to_datetime(data['datetime']),
+                    date=data['datetime'].apply(lambda x: str(x)[0:10]),
+                    date_stamp=data['datetime'].apply(
+                        lambda x: QA_util_date_stamp(x)),
+                    time_stamp=data['datetime'].apply(
+                        lambda x: QA_util_time_stamp(x)),
+                    type=_type, code=str(code))\
+            .set_index('datetime', drop=False, inplace=False).tail(lens)
         if data is not None:
             return data
         else:
@@ -242,45 +267,55 @@ def QA_fetch_get_stock_day(code, start_date, end_date, if_fq='00', frequence='da
     """
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
-    with api.connect(ip, port, time_out=0.7):
+    try:
+        with api.connect(ip, port, time_out=0.7):
 
-        if frequence in ['day', 'd', 'D', 'DAY', 'Day']:
-            frequence = 9
-        elif frequence in ['w', 'W', 'Week', 'week']:
-            frequence = 5
-        elif frequence in ['month', 'M', 'm', 'Month']:
-            frequence = 6
-        elif frequence in ['quarter', 'Q', 'Quarter', 'q']:
-            frequence = 10
-        elif frequence in ['y', 'Y', 'year', 'Year']:
-            frequence = 11
-        start_date = str(start_date)[0:10]
-        today_ = datetime.date.today()
-        lens = QA_util_get_trade_gap(start_date, today_)
+            if frequence in ['day', 'd', 'D', 'DAY', 'Day']:
+                frequence = 9
+            elif frequence in ['w', 'W', 'Week', 'week']:
+                frequence = 5
+            elif frequence in ['month', 'M', 'm', 'Month']:
+                frequence = 6
+            elif frequence in ['quarter', 'Q', 'Quarter', 'q']:
+                frequence = 10
+            elif frequence in ['y', 'Y', 'year', 'Year']:
+                frequence = 11
+            start_date = str(start_date)[0:10]
+            today_ = datetime.date.today()
+            lens = QA_util_get_trade_gap(start_date, today_)
 
-        data = pd.concat([api.to_df(api.get_security_bars(frequence, _select_market_code(
-            code), code, (int(lens / 800) - i) * 800, 800)) for i in range(int(lens / 800) + 1)], axis=0)
+            data = pd.concat([api.to_df(api.get_security_bars(frequence, _select_market_code(
+                code), code, (int(lens / 800) - i) * 800, 800)) for i in range(int(lens / 800) + 1)], axis=0)
 
-        # 这里的问题是: 如果只取了一天的股票,而当天停牌, 那么就直接返回None了
-        if len(data) < 1:
-            return None
-        data = data[data['open'] != 0]
+            # 这里的问题是: 如果只取了一天的股票,而当天停牌, 那么就直接返回None了
+            if len(data) < 1:
+                return None
+            data = data[data['open'] != 0]
 
+            data = data.assign(date=data['datetime'].apply(lambda x: str(x[0:10])),
+                               code=str(code),
+                               date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(str(x)[0:10])))\
+                .set_index('date', drop=False, inplace=False)
 
-        data = data.assign(date=data['datetime'].apply(lambda x: str(x[0:10]))).assign(code=str(code))\
-            .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(str(x)[0:10]))).set_index('date', drop=False, inplace=False)
-
-        data = data.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1)[start_date:end_date].assign(date=data['date'].apply(lambda x: str(x)[0:10]))[start_date:end_date]
-        if if_fq in ['00','bfq']:
-            return data
+            data = data.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1)[
+                start_date:end_date]
+            if if_fq in ['00', 'bfq']:
+                return data
+            else:
+                print('CURRENTLY NOT SUPPORT REALTIME FUQUAN')
+                return None
+                # xdxr = QA_fetch_get_stock_xdxr(code)
+                # if if_fq in ['01','qfq']:
+                #     return QA_data_make_qfq(data,xdxr)
+                # elif if_fq in ['02','hfq']:
+                #     return QA_data_make_hfq(data,xdxr)
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('Tushare内置的pytdx版本和QUANTAXIS使用的pytdx 版本不同, 请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
         else:
-            print('CURRENTLY NOT SUPPORT REALTIME FUQUAN')
-            return None
-            # xdxr = QA_fetch_get_stock_xdxr(code)
-            # if if_fq in ['01','qfq']:
-            #     return QA_data_make_qfq(data,xdxr)
-            # elif if_fq in ['02','hfq']:
-            #     return QA_data_make_hfq(data,xdxr)
+            print(e)
 
 
 def QA_fetch_get_stock_min(code, start, end, frequence='1min', ip=None, port=None):
@@ -312,12 +347,14 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', ip=None, port=Non
         data = pd.concat([api.to_df(api.get_security_bars(frequence, _select_market_code(
             str(code)), str(code), (int(lens / 800) - i) * 800, 800)) for i in range(int(lens / 800) + 1)], axis=0)
         data = data\
-            .assign(datetime=pd.to_datetime(data['datetime']), code=str(code))\
             .drop(['year', 'month', 'day', 'hour', 'minute'], axis=1, inplace=False)\
-            .assign(date=data['datetime'].apply(lambda x: str(x)[0:10]))\
-            .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(x)))\
-            .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x)))\
-            .assign(type=type_).set_index('datetime', drop=False, inplace=False)[start:end]
+            .assign(datetime=pd.to_datetime(data['datetime']), code=str(code),
+                    date=data['datetime'].apply(lambda x: str(x)[0:10]),
+                    date_stamp=data['datetime'].apply(
+                        lambda x: QA_util_date_stamp(x)),
+                    time_stamp=data['datetime'].apply(
+                        lambda x: QA_util_time_stamp(x)),
+                    type=type_).set_index('datetime', drop=False, inplace=False)[start:end]
         return data.assign(datetime=data['datetime'].apply(lambda x: str(x)))
 
 
@@ -338,10 +375,19 @@ def QA_fetch_get_stock_latest(code, ip=None, port=None):
 
 def QA_fetch_get_stock_realtime(code=['000001', '000002'], ip=None, port=None):
     ip, port = get_mainmarket_ip(ip, port)
+    # reversed_bytes9 --> 涨速
+    # active1,active2 --> 活跃度
+    # reversed_bytes1 --> -价格*100
+    # vol 总量 cur_vol 现量
+    # amount 总金额
+    # s_vol 内盘 b_vol 外盘
+    # reversed_bytes2 市场
+    # # reversed_bytes0 时间
+
     api = TdxHq_API()
     __data = pd.DataFrame()
     with api.connect(ip, port):
-        code = [code] if type(code) is str else code
+        code = [code] if isinstance(code, str) else code
         for id_ in range(int(len(code) / 80) + 1):
             __data = __data.append(api.to_df(api.get_security_quotes(
                 [(_select_market_code(x), x) for x in code[80 * id_:80 * (id_ + 1)]])))
@@ -358,15 +404,16 @@ def QA_fetch_depth_market_data(code=['000001', '000002'], ip=None, port=None):
     api = TdxHq_API()
     __data = pd.DataFrame()
     with api.connect(ip, port):
-        code = [code] if type(code) is str else code
+        code = [code] if isinstance(code, str) else code
         for id_ in range(int(len(code) / 80) + 1):
             __data = __data.append(api.to_df(api.get_security_quotes(
                 [(_select_market_code(x), x) for x in code[80 * id_:80 * (id_ + 1)]])))
             __data['datetime'] = datetime.datetime.now()
-        data = __data[['datetime', 'active1', 'active2', 'last_close', 'code', 'open', 'high', 'low', 'price', 'cur_vol',
-                       's_vol', 'b_vol', 'vol', 'ask1', 'ask_vol1', 'bid1', 'bid_vol1', 'ask2', 'ask_vol2',
-                       'bid2', 'bid_vol2', 'ask3', 'ask_vol3', 'bid3', 'bid_vol3', 'ask4',
-                       'ask_vol4', 'bid4', 'bid_vol4', 'ask5', 'ask_vol5', 'bid5', 'bid_vol5']]
+        data = __data
+        # data = __data[['datetime', 'active1', 'active2', 'last_close', 'code', 'open', 'high', 'low', 'price', 'cur_vol',
+        #                's_vol', 'b_vol', 'vol', 'ask1', 'ask_vol1', 'bid1', 'bid_vol1', 'ask2', 'ask_vol2',
+        #                'bid2', 'bid_vol2', 'ask3', 'ask_vol3', 'bid3', 'bid_vol3', 'ask4',
+        #                'ask_vol4', 'bid4', 'bid_vol4', 'ask5', 'ask_vol5', 'bid5', 'bid_vol5']]
         return data.set_index(['datetime', 'code'], drop=False, inplace=False)
 
 
@@ -459,10 +506,14 @@ def for_sz(code):
 def for_sh(code):
     if str(code)[0] == '6':
         return 'stock_cn'
-    elif str(code)[0] == '0':
+    elif str(code)[0:3] in ['000', '880']:
         return 'index_cn'
     elif str(code)[0:2] == '51':
         return 'etf_cn'
+    # 110×××120×××企业债券；
+    # 129×××100×××可转换债券；
+    elif str(code)[0:3] in ['129', '100', '110', '120']:
+        return 'bond_cn'
     else:
         return 'undefined'
 
@@ -530,7 +581,65 @@ def QA_fetch_get_bond_list(ip=None, port=None):
         ip {[type]} -- [description] (default: {None})
         port {[type]} -- [description] (default: {None})
     """
-    pass
+    ip, port = get_mainmarket_ip(ip, port)
+    api = TdxHq_API()
+    with api.connect(ip, port):
+        data = pd.concat([pd.concat([api.to_df(api.get_security_list(j, i * 1000)).assign(sse='sz' if j == 0 else 'sh').set_index(
+            ['code', 'sse'], drop=False) for i in range(int(api.get_security_count(j) / 1000) + 1)], axis=0) for j in range(2)], axis=0)
+        #data.code = data.code.apply(int)
+        sz = data.query('sse=="sz"')
+        sh = data.query('sse=="sh"')
+        sz = sz.assign(sec=sz.code.apply(for_sz))
+        sh = sh.assign(sec=sh.code.apply(for_sh))
+        return pd.concat([sz, sh]).query('sec=="bond_cn"').sort_index().assign(name=data['name'].apply(lambda x: str(x)[0:6]))
+
+
+def QA_fetch_get_bond_day(code, start_date, end_date, frequence='day', ip=None, port=None):
+
+    ip, port = get_mainmarket_ip(ip, port)
+    api = TdxHq_API()
+    if frequence in ['day', 'd', 'D', 'DAY', 'Day']:
+        frequence = 9
+    elif frequence in ['w', 'W', 'Week', 'week']:
+        frequence = 5
+    elif frequence in ['month', 'M', 'm', 'Month']:
+        frequence = 6
+    elif frequence in ['Q', 'Quarter', 'q']:
+        frequence = 10
+    elif frequence in ['y', 'Y', 'year', 'Year']:
+        frequence = 11
+
+    with api.connect(ip, port):
+
+        start_date = str(start_date)[0:10]
+        today_ = datetime.date.today()
+        lens = QA_util_get_trade_gap(start_date, today_)
+
+        # sh
+        # 110×××
+        # 120×××企业债券；
+        # 129×××
+        # 100×××可转换债券；
+
+        # sz
+        # 10xxxx 国债现货
+        # 11xxxx 债券
+        # 12xxxx 可转换债券
+        # 12xxxx 国债回购
+
+        if str(code)[0] in ['5', '1']:  # ETF
+            data = pd.concat([api.to_df(api.get_security_bars(
+                frequence, 1 if str(code)[0] in ['0', '8', '9', '5'] else 0, code, (int(lens / 800) - i) * 800, 800)) for i in range(int(lens / 800) + 1)], axis=0)
+        else:
+            data = pd.concat([api.to_df(api.get_index_bars(
+                frequence, 1 if str(code)[0] in ['0', '8', '9', '5'] else 0, code, (int(lens / 800) - i) * 800, 800)) for i in range(int(lens / 800) + 1)], axis=0)
+        data = data.assign(date=data['datetime'].apply(lambda x: str(x[0:10]))).assign(code=str(code))\
+            .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(str(x)[0:10])))\
+            .set_index('date', drop=False, inplace=False)\
+            .assign(code=code)\
+            .drop(['year', 'month', 'day', 'hour',
+                   'minute', 'datetime'], axis=1)[start_date:end_date]
+        return data.assign(date=data['date'].apply(lambda x: str(x)[0:10]))
 
 
 def QA_fetch_get_index_day(code, start_date, end_date, frequence='day', ip=None, port=None):
@@ -541,12 +650,12 @@ def QA_fetch_get_index_day(code, start_date, end_date, frequence='day', ip=None,
         code {[type]} -- [description]
         start_date {[type]} -- [description]
         end_date {[type]} -- [description]
-    
+
     Keyword Arguments:
         frequence {str} -- [description] (default: {'day'})
         ip {[type]} -- [description] (default: {None})
         port {[type]} -- [description] (default: {None})
-    
+
     Returns:
         [type] -- [description]
     """
@@ -655,6 +764,16 @@ def __QA_fetch_get_stock_transaction(code, day, retry, api):
 
 
 def QA_fetch_get_stock_transaction(code, start, end, retry=2, ip=None, port=None):
+    '''
+
+    :param code: 股票代码
+    :param start: 开始日期
+    :param end:  结束日期
+    :param retry: 重新尝试次数
+    :param ip: 地址
+    :param port: 端口
+    :return:
+    '''
     '历史分笔成交 buyorsell 1--sell 0--buy 2--盘前'
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
@@ -760,7 +879,7 @@ def QA_fetch_get_stock_block(ip=None, port=None):
 
 
 """
-
+http://www.tdx.com.cn/page_46.html
 
 
     market  category      name short_name
@@ -1189,34 +1308,39 @@ def QA_fetch_get_future_min(code, start, end, frequence='1min', ip=None, port=No
 
     if str(frequence) in ['5', '5m', '5min', 'five']:
         frequence, type_ = 0, '5min'
-        lens = 48 * lens
+        lens = 48 * lens * 2.5
     elif str(frequence) in ['1', '1m', '1min', 'one']:
         frequence, type_ = 8, '1min'
-        lens = 240 * lens
+        lens = 240 * lens * 2.5
     elif str(frequence) in ['15', '15m', '15min', 'fifteen']:
         frequence, type_ = 1, '15min'
-        lens = 16 * lens
+        lens = 16 * lens * 2.5
     elif str(frequence) in ['30', '30m', '30min', 'half']:
         frequence, type_ = 2, '30min'
-        lens = 8 * lens
+        lens = 8 * lens * 2.5
     elif str(frequence) in ['60', '60m', '60min', '1h']:
         frequence, type_ = 3, '60min'
-        lens = 4 * lens
+        lens = 4 * lens * 2.5
     if lens > 20800:
         lens = 20800
+
+    # print(lens)
     with apix.connect(ip, port):
+
         code_market = extension_market_list.query('code=="{}"'.format(code))
         data = pd.concat([apix.to_df(apix.get_instrument_bars(frequence, int(code_market.market), str(
             code), (int(lens / 700) - i) * 700, 700)) for i in range(int(lens / 700) + 1)], axis=0)
-
+        # print(data)
+        # print(data.datetime)
         data = data\
-            .assign(datetime=pd.to_datetime(data['datetime']), code=str(code))\
+            .assign(tradetime=data['datetime'].apply(str), code=str(code))\
+            .assign(datetime=pd.to_datetime(data['datetime'].apply(QA_util_future_to_realdatetime, 1)))\
             .drop(['year', 'month', 'day', 'hour', 'minute'], axis=1, inplace=False)\
             .assign(date=data['datetime'].apply(lambda x: str(x)[0:10]))\
             .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(x)))\
             .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x)))\
-            .assign(type=type_).set_index('datetime', drop=False, inplace=False)[start:end]
-        return data.assign(datetime=data['datetime'].apply(lambda x: str(x)))
+            .assign(type=type_).set_index('datetime', drop=False, inplace=False)
+        return data.assign(datetime=data['datetime'].apply(lambda x: str(x)))[start:end].sort_index()
 
 
 def __QA_fetch_get_future_transaction(code, day, retry, code_market, apix):

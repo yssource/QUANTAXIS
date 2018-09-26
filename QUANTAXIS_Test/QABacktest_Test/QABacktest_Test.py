@@ -7,7 +7,7 @@ from QUANTAXIS import QUANTAXIS as QA
 from QUANTAXIS.QAARP.QARisk import QA_Performance, QA_Risk
 from QUANTAXIS.QAARP.QAStrategy import QA_Strategy
 from QUANTAXIS.QAARP.QAUser import QA_User
-from QUANTAXIS.QABacktest.QABacktest import QA_Backtest
+from QUANTAXIS.QAApplication.QABacktest import QA_Backtest
 from QUANTAXIS.QAFetch.QAQuery import QA_fetch_stock_day
 from QUANTAXIS.QAIndicator import QA_indicator_MA
 from QUANTAXIS.QAUtil.QADate import QA_util_datetime_to_strdate
@@ -68,7 +68,7 @@ class MAStrategy(QA_Strategy):
                     print("*>> MAStrategy!on_bar  event.send_order 买入 buy %d" % (100))
                     print(event.send_order)
                     print(type(event.send_order))
-                    event.send_order(account_id=self.account_cookie,
+                    event.send_order(account_cookie=self.account_cookie,
                                      amount=100,
                                      amount_model=AMOUNT_MODEL.BY_AMOUNT,
                                      time=self.current_time,
@@ -85,7 +85,7 @@ class MAStrategy(QA_Strategy):
                 if self.sell_available is not None and self.sell_available.get(item, 0) > 0:
 
                     print("*>> MAStrategy!on_bar  event.send_order 卖出 buy %d" % 100)
-                    event.send_order(account_id=self.account_cookie,
+                    event.send_order(account_cookie=self.account_cookie,
                                      amount=self.sell_available[item],
                                      amount_model=AMOUNT_MODEL.BY_AMOUNT,
                                      time=self.current_time,
