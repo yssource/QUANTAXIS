@@ -74,7 +74,7 @@ def get_config():
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s QUANTAXIS>>> %(message)s',
                     datefmt='%H:%M:%S',
-                    filename='{}{}quantaxis-{}-.log'.format(get_config(), os.sep, str(datetime.datetime.now().strftime(
+                    filename='{}{}quantaxis-{}-.log'.format('/tmp', os.sep, str(datetime.datetime.now().strftime(
                         '%Y-%m-%d-%H-%M-%S'))),
                     filemode='w',
                     )
