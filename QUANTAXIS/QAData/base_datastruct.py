@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import json
 import datetime
 import os
 import statistics
@@ -62,8 +63,11 @@ class _quotation_base():
         '''
         if 'volume' not in DataFrame.columns and 'vol' in DataFrame.columns:
             DataFrame = DataFrame.assign(volume=DataFrame.vol)
+        if 'volume' not in DataFrame.columns and 'trade' in DataFrame.columns:
+            DataFrame = DataFrame.assign(volume=DataFrame.trade)
+        # print(DataFrame)
         # 🛠todo 判断DataFame 对象字段的合法性，是否正确
-        self.data = DataFrame.sort_index()
+        self.data = DataFrame.drop_duplicates().sort_index()
         self.data.index = self.data.index.remove_unused_levels()
         # 🛠todo 该变量没有用到， 是不是 self.type = marketdata_type ??
 
@@ -367,6 +371,11 @@ class _quotation_base():
         except:
             return None
 
+    @property
+    @lru_cache()
+    def ndarray(self):
+        return self.to_numpy()
+
     '''
     ########################################################################################################
     计算统计相关的
@@ -533,14 +542,19 @@ class _quotation_base():
         return res
 
     @property
-    @lru_cache()
     def panel_gen(self):
         '返回一个基于bar的面板迭代器'
         for item in self.index.levels[0]:
             yield self.new(self.data.xs(item, level=0, drop_level=False), dtype=self.type, if_fq=self.if_fq)
 
     @property
-    @lru_cache()
+    def bar_gen(self):
+        '返回一个基于bar的面板迭代器 返回的是dataframe'
+        # for item in self.index.levels[0]:
+        #     yield self.data.xs(item, level=0, drop_level=False)
+        return self.data.iterrows()
+
+    @property
     def security_gen(self):
         '返回一个基于代码的迭代器'
         for item in self.index.levels[1]:
@@ -591,7 +605,13 @@ class _quotation_base():
         except Exception as e:
             raise e
 
-    def plot(self, code=None):
+    def reset_index(self):
+        return self.data.reset_index()
+
+    def rolling(self, N):
+        return self.groupby('code').rolling(N)
+
+    def kline_echarts(self, code=None):
 
         def kline_formater(param):
             return param.name + ':' + vars(param)
@@ -615,16 +635,11 @@ class _quotation_base():
                     datetime = np.array(ds.datetime.map(str))
                 ohlc = np.array(
                     ds.data.loc[:, ['open', 'close', 'low', 'high']])
-                #amount = np.array(ds.amount)
-                #vol = np.array(ds.volume)
 
                 kline.add(ds.code[0], datetime, ohlc, mark_point=[
-                          "max", "min"], is_datazoom_show=False, datazoom_orient='horizontal')
+                          "max", "min"], is_datazoom_show=True, datazoom_orient='horizontal')
+            return kline
 
-            kline.render(path_name)
-            webbrowser.open(path_name)
-            QA_util_log_info(
-                'The Pic has been saved to your path: %s' % path_name)
         else:
             data = []
             axis = []
@@ -637,7 +652,6 @@ class _quotation_base():
                 datetime = np.array(ds.datetime.map(str))
 
             ohlc = np.array(ds.data.loc[:, ['open', 'close', 'low', 'high']])
-            #amount = np.array(ds.amount)
             vol = np.array(ds.volume)
             kline = Kline('{}__{}__{}'.format(code, self.if_fq, self.type),
                           width=1360, height=700, page_title='QUANTAXIS')
@@ -655,17 +669,19 @@ class _quotation_base():
             bar.add(self.code, datetime, vol,
                     is_datazoom_show=True,
                     datazoom_xaxis_index=[0, 1])
-            path_name = '.{}QA_{}_{}_{}.html'.format(
-                os.sep, self.type, code, self.if_fq)
 
             grid = Grid(width=1360, height=700, page_title='QUANTAXIS')
             grid.add(bar, grid_top="80%")
             grid.add(kline, grid_bottom="30%")
-            grid.render(path_name)
+            return grid
 
-            webbrowser.open(path_name)
-            QA_util_log_info(
-                'The Pic has been saved to your path: {}'.format(path_name))
+    def plot(self, code=None):
+        path_name = '.{}QA_{}_{}_{}.html'.format(
+            os.sep, self.type, code, self.if_fq)
+        self.kline_echarts(code).render(path_name)
+        webbrowser.open(path_name)
+        QA_util_log_info(
+            'The Pic has been saved to your path: {}'.format(path_name))
 
     def get(self, name):
 
@@ -731,6 +747,58 @@ class _quotation_base():
     def reverse(self):
         return self.new(self.data[::-1])
 
+    def reindex(self, ind):
+        """reindex
+
+        Arguments:
+            ind {[type]} -- [description]
+
+        Raises:
+            RuntimeError -- [description]
+            RuntimeError -- [description]
+
+        Returns:
+            [type] -- [description]
+        """
+
+        if isinstance(ind, pd.MultiIndex):
+            try:
+                return self.new(self.data.reindex(ind))
+            except:
+                raise RuntimeError('QADATASTRUCT ERROR: CANNOT REINDEX')
+        else:
+            raise RuntimeError(
+                'QADATASTRUCT ERROR: ONLY ACCEPT MULTI-INDEX FORMAT')
+
+    def reindex_time(self, ind):
+        if isinstance(ind, pd.DatetimeIndex):
+            try:
+                return self.new(self.data.loc[(ind, slice(None)), :])
+            except:
+                raise RuntimeError('QADATASTRUCT ERROR: CANNOT REINDEX')
+
+        else:
+            raise RuntimeError(
+                'QADATASTRUCT ERROR: ONLY ACCEPT DATETIME-INDEX FORMAT')
+
+    def iterrows(self):
+        return self.data.iterrows()
+
+    def iteritems(self):
+        return self.data.iteritems()
+
+    def itertuples(self):
+        return self.data.itertuples()
+
+    def abs(self):
+        return self.new(self.data.abs())
+
+    def agg(self, func, axis=0, *args, **kwargs):
+        return self.new(self.data.agg(func, axis=0, *args, **kwargs))
+
+    def aggregate(self, func, axis=0, *args, **kwargs):
+        return self.new(self.data.aggregate(func, axis=0, *args, **kwargs))
+
     def tail(self, lens):
         """返回最后Lens个值的DataStruct
 
@@ -765,7 +833,7 @@ class _quotation_base():
         """
         转换DataStruct为list
         """
-        return np.asarray(self.data).tolist()
+        return self.data.reset_index().values.tolist()
 
     def to_pd(self):
         """
@@ -777,7 +845,7 @@ class _quotation_base():
         """
         转换DataStruct为numpy.ndarray
         """
-        return np.asarray(self.data)
+        return self.data.reset_index().values
 
     def to_json(self):
         """
@@ -785,11 +853,17 @@ class _quotation_base():
         """
         return QA_util_to_json_from_pandas(self.data.reset_index())
 
-    def to_csv(self,*args,**kwargs):
+    def to_string(self):
+        return json.dumps(self.to_json())
+
+    def to_bytes(self):
+        return bytes(self.to_string(), encoding='utf-8')
+
+    def to_csv(self, *args, **kwargs):
         """datastruct 存本地csv
         """
 
-        self.data.to_csv(*args,**kwargs)
+        self.data.to_csv(*args, **kwargs)
 
     def to_dict(self, orient='dict'):
         """
@@ -821,8 +895,71 @@ class _quotation_base():
     #     return pd.concat(list(map(lambda x: func(
     #         self.data.loc[(slice(None), x), :], *arg, **kwargs), self.code))).sort_index()
 
+    def apply(self, func, *arg, **kwargs):
+        """func(DataStruct)
+
+        Arguments:
+            func {[type]} -- [description]
+
+        Returns:
+            [type] -- [description]
+        """
+
+        return func(self, *arg, **kwargs)
+
     def add_func(self, func, *arg, **kwargs):
+        """QADATASTRUCT的指标/函数apply入口
+
+        Arguments:
+            func {[type]} -- [description]
+
+        Returns:
+            [type] -- [description]
+        """
+
         return self.groupby(level=1, sort=False).apply(func, *arg, **kwargs)
+
+    # def add_func_adv(self, func, *arg, **kwargs):
+    #     """QADATASTRUCT的指标/函数apply入口
+
+    #     Arguments:
+    #         func {[type]} -- [description]
+
+    #     Returns:
+    #         [type] -- [description]
+    #     """
+    #     return self.data.groupby(by=None, axis=0, level=1, as_index=True, sort=False, group_keys=False, squeeze=False).apply(func, *arg, **kwargs)
+
+    def get_data(self, columns, type='ndarray', with_index=False):
+        """获取不同格式的数据
+
+        Arguments:
+            columns {[type]} -- [description]
+
+        Keyword Arguments:
+            type {str} -- [description] (default: {'ndarray'})
+            with_index {bool} -- [description] (default: {False})
+
+        Returns:
+            [type] -- [description]
+        """
+
+        res = self.select_columns(columns)
+        if type == 'ndarray':
+            if with_index:
+                return res.reset_index().values
+            else:
+                return res.values
+        elif type == 'list':
+            if with_index:
+                return res.reset_index().values.tolist()
+            else:
+                return res.values.tolist()
+        elif type == 'dataframe':
+            if with_index:
+                return res.reset_index()
+            else:
+                return res
 
     def pivot(self, column_):
         """增加对于多列的支持"""
