@@ -369,7 +369,8 @@ def QA_SU_save_stock_min(client=DATABASE, ui_log=None, ui_progress=None):
         QA_util_log_info(
             '##JOB03 Now Saving STOCK_MIN ==== {}'.format(str(code)), ui_log=ui_log)
         try:
-            for type in ['1min', '5min', '15min', '30min', '60min']:
+            # for type in ['1min', '5min', '15min', '30min', '60min']:
+            for type in ['1min']:
                 ref_ = coll.find(
                     {'code': str(code)[0:6], 'type': type})
                 end_time = str(now_time())[0:19]
@@ -510,7 +511,8 @@ def QA_SU_save_index_min(client=DATABASE, ui_log=None, ui_progress=None):
             '##JOB05 Now Saving Index_MIN ==== {}'.format(str(code)), ui_log=ui_log)
         try:
 
-            for type in ['1min', '5min', '15min', '30min', '60min']:
+            # for type in ['1min', '5min', '15min', '30min', '60min']:
+            for type in ['1min']:
                 ref_ = coll.find(
                     {'code': str(code)[0:6], 'type': type})
                 end_time = str(now_time())[0:19]
@@ -646,7 +648,8 @@ def QA_SU_save_etf_min(client=DATABASE, ui_log=None, ui_progress=None):
             '##JOB07 Now Saving ETF_MIN ==== {}'.format(str(code)), ui_log=ui_log)
         try:
 
-            for type in ['1min', '5min', '15min', '30min', '60min']:
+            # for type in ['1min', '5min', '15min', '30min', '60min']:
+            for type in ['1min']:
                 ref_ = coll.find(
                     {'code': str(code)[0:6], 'type': type})
                 end_time = str(now_time())[0:19]
@@ -1334,7 +1337,8 @@ def _save_option_commodity_m_min(client=DATABASE, ui_log=None, ui_progress=None)
             '##JOB13 Now Saving Option M 豆粕 ==== {}'.format(str(code)), ui_log=ui_log)
         try:
 
-            for type in ['1min', '5min', '15min', '30min', '60min']:
+            # for type in ['1min', '5min', '15min', '30min', '60min']:
+            for type in ['1min']:
                 ref_ = coll.find({'code': str(code)[0:8], 'type': type})
 
                 end_time = str(now_time())[0:19]
@@ -1434,7 +1438,8 @@ def QA_SU_save_option_min(client=DATABASE, ui_log=None, ui_progress=None):
             '##JOB13 Now Saving Option 50ETF MIN ==== {}'.format(str(code)), ui_log=ui_log)
         try:
 
-            for type in ['1min', '5min', '15min', '30min', '60min']:
+            # for type in ['1min', '5min', '15min', '30min', '60min']:
+            for type in ['1min']:
                 ref_ = coll.find({'code': str(code)[0:8], 'type': type})
 
                 end_time = str(now_time())[0:19]
@@ -1849,7 +1854,8 @@ def QA_SU_save_future_min(client=DATABASE, ui_log=None, ui_progress=None):
             '##JOB13 Now Saving Future_MIN ==== {}'.format(str(code)), ui_log=ui_log)
         try:
 
-            for type in ['1min', '5min', '15min', '30min', '60min']:
+            # for type in ['1min', '5min', '15min', '30min', '60min']:
+            for type in ['1min']:
                 ref_ = coll.find(
                     {'code': str(code)[0:6], 'type': type})
                 end_time = str(now_time())[0:19]
@@ -1927,7 +1933,8 @@ def QA_SU_save_future_min_all(client=DATABASE, ui_log=None, ui_progress=None):
             '##JOB13 Now Saving Future_MIN ==== {}'.format(str(code)), ui_log=ui_log)
         try:
 
-            for type in ['1min', '5min', '15min', '30min', '60min']:
+            # for type in ['1min', '5min', '15min', '30min', '60min']:
+            for type in ['1min']:
                 ref_ = coll.find(
                     {'code': str(code)[0:6], 'type': type})
                 end_time = str(now_time())[0:19]
