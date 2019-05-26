@@ -170,3 +170,7 @@ selenium_driver/*
 QUANTAXIS_WEBDRIVER/*
 
 .mypy_cache/
+.venv/
+GPATH
+GRTAGS
+GTAGS
