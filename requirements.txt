@@ -10,7 +10,7 @@ gevent-websocket>=0.10.1
 apscheduler>=3.3.1
 tornado
 zenlog
-pyecharts
+pyecharts==0.5.11
 protobuf>=3.4
 motor>=1.1
 retrying
@@ -20,3 +20,5 @@ scrapy
 attrs>=17.4.0
 pyconvert>=0.6.3
 demjson>=2.2.4
+pyecharts_snapshot
+typed-ast>=1.3.0
