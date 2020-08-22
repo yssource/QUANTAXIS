@@ -105,7 +105,7 @@ setup(
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
     ],
-    install_requires=['pandas>=0.23.4', 'numpy>=1.12.0', 'tushare', 'flask_socketio>=2.9.0 ', 'motor>=1.1', 'seaborn>=0.8.1', 'pyconvert>=0.6.3',
+    install_requires=['pandas>=0.23.4', 'numpy>=1.12.0', 'tushare', 'flask_socketio>=2.9.0 ', 'motor>=1.1', 'seaborn>=0.8.1', 'pyconvert',
                       'lxml>=4.0', ' beautifulsoup4', 'matplotlib', 'requests', 'tornado', 'janus', 'pyecharts_snapshot', 'async_timeout',
                       'demjson>=2.2.4', 'scrapy', 'selenium',
                       "typed-ast>=1.3.0", "mock>=2.0", 
